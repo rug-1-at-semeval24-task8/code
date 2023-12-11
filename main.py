@@ -27,7 +27,7 @@ experiment = Experiment(
 )
 
 
-def get_data(train_path, test_path, random_seed):
+def get_data(train_path, test_path, random_seed, data_split_strategy):
     """
     function to read dataframe with columns
     """
@@ -35,9 +35,82 @@ def get_data(train_path, test_path, random_seed):
     train_df = pd.read_json(train_path, lines=True)
     test_df = pd.read_json(test_path, lines=True)
 
-    train_df, val_df = train_test_split(
-        train_df, test_size=0.2, stratify=train_df["label"], random_state=random_seed
+    if data_split_strategy == "train_test_split":
+        train_df, val_df = train_test_split(
+            train_df,
+            test_size=0.2,
+            stratify=train_df["label"],
+            random_state=random_seed,
+        )
+
+        return train_df, val_df, test_df
+    else:
+        human = train_df[train_df["label"] == 0]
+        human, human_rest = train_test_split(
+            human, test_size=0.5, random_state=random_seed
+        )
+
+        if data_split_strategy == "human_chatgpt_split":
+            chatgpt = train_df[train_df["label"] == 1]
+            rest = train_df[train_df["label"] != 1 and train_df["label"] != 0]
+
+            # extend chatgpt data with human data
+            val_df = pd.concat([chatgpt, human])
+
+            # extend rest data with human data
+            train_df = pd.concat([rest, human_rest])
+
+        if data_split_strategy == "human_cohere_split":
+            cohere = train_df[train_df["label"] == 2]
+            rest = train_df[train_df["label"] != 0 and train_df["label"] != 2]
+
+            # extend chatgpt data with human data
+            val_df = pd.concat([cohere, human])
+
+            # extend rest data with human data
+            train_df = pd.concat([rest, human_rest])
+
+        if data_split_strategy == "human_davinci_split":
+            davinci = train_df[train_df["label"] == 3]
+            rest = train_df[train_df["label"] != 0 and train_df["label"] != 3]
+
+            # extend chatgpt data with human data
+            val_df = pd.concat([davinci, human])
+
+            # extend rest data with human data
+            train_df = pd.concat([rest, human_rest])
+
+        if data_split_strategy == "human_bloomz_split":
+            bloomz = train_df[train_df["label"] == 4]
+            rest = train_df[train_df["label"] != 0 and train_df["label"] != 4]
+
+            # extend chatgpt data with human data
+            val_df = pd.concat([bloomz, human])
+
+            # extend rest data with human data
+            train_df = pd.concat([rest, human_rest])
+
+        if data_split_strategy == "human_dooly_split":
+            dooly = train_df[train_df["label"] == 5]
+            rest = train_df[train_df["label"] != 0 and train_df["label"] != 5]
+
+            # extend chatgpt data with human data
+            val_df = pd.concat([dooly, human])
+
+            # extend rest data with human data
+            train_df = pd.concat([rest, human_rest])
+
+    experiment.log_table(
+        "train_value_counts", train_df["model"].value_counts().to_frame()
     )
+    experiment.log_table("val_value_counts", val_df["model"].value_counts().to_frame())
+    experiment.log_table(
+        "test_value_counts", test_df["model"].value_counts().to_frame()
+    )
+
+    experiment.log_table("train_meta", train_df.describe(include="all"))
+    experiment.log_table("val_meta", val_df.describe(include="all"))
+    experiment.log_table("test_meta", test_df.describe(include="all"))
 
     return train_df, val_df, test_df
 
@@ -96,9 +169,28 @@ if __name__ == "__main__":
         default=True,
         type=bool,
     )
-    parser.add_argument("--enable_perplexity", "-epp", help="Enable perplexity feature", default=False, type=bool)
+    parser.add_argument(
+        "--enable_perplexity",
+        "-epp",
+        help="Enable perplexity feature",
+        default=False,
+        type=bool,
+    )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
-    parser.add_argument("--tags", "-tg", help="Tags", nargs='+', default=[])
+    parser.add_argument("--tags", "-tg", help="Tags", nargs="+", default=[])
+    parser.add_argument(
+        "--data_split_strategy",
+        "-dss",
+        default="train_test_split",
+        choices=[
+            "train_test_split",
+            "human_chatgpt_split",
+            "human_cohere_split",
+            "human_davinci_split",
+            "human_bloomz_split",
+            "human_dooly_split",
+        ],
+    )
     args = parser.parse_args()
 
     device = (
@@ -115,7 +207,6 @@ if __name__ == "__main__":
         args.prediction_file_path
     )  # For example subtaskB_predictions.jsonl
     batch_size = args.batch_size
-    
 
     # LOG PARAMETERS
     experiment.log_parameters(vars(args))
@@ -164,7 +255,7 @@ if __name__ == "__main__":
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
-    train_df, valid_df, test_df = get_data(train_path, test_path, random_seed)
+    train_df, valid_df, test_df = get_data(train_path, test_path, random_seed, args.data_split_strategy)
 
     # for testing purposes
     if args.data_size > 0:
