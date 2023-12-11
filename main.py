@@ -74,7 +74,7 @@ def get_data(
             val_df = pd.concat([cohere, human])
 
             # extend rest data with human data
-            train_df = pd.concat([rest, human_rest])
+            train_df = pd.concat([rest, human_rest]).sample(frac=1).reset_index(drop=True)
 
         if data_split_strategy == "human_davinci_split":
             davinci = train_df[train_df["model"] == "davinci"]
@@ -112,6 +112,10 @@ def get_data(
             # extend rest data with human data
             train_df = pd.concat([rest, human_rest])
 
+        # shuffle data
+        train_df = train_df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        val_df = val_df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        
     if data_split_strategy_reverse:
         val_df, test_df = test_df, val_df
 
