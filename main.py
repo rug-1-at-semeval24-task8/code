@@ -90,14 +90,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--seed", "-s", help="Seed", default=10, type=int)
     parser.add_argument(
-        "--enable-preditability",
+        "--enable_preditability",
         "-ep",
         help="Enable predictability feature",
         default=True,
         type=bool,
     )
-    parser.add_argument("--enable-perplexity", "-epp", help="Enable perplexity feature", default=False, type=bool)
-    parser.add_argument("--data-size", "-ds", help="Data size", default=-1, type=int)
+    parser.add_argument("--enable_perplexity", "-epp", help="Enable perplexity feature", default=False, type=bool)
+    parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
     parser.add_argument("--tags", "-tg", help="Tags", nargs='+', default=[])
     args = parser.parse_args()
 
