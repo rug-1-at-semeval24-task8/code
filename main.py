@@ -52,7 +52,7 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_chatgpt_split":
             chatgpt = train_df[train_df["label"] == 1]
-            rest = train_df[train_df["label"] != 1 and train_df["label"] != 0]
+            rest = train_df[train_df["label"] != 1 & train_df["label"] != 0]
 
             # extend chatgpt data with human data
             val_df = pd.concat([chatgpt, human])
@@ -62,7 +62,7 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_cohere_split":
             cohere = train_df[train_df["label"] == 2]
-            rest = train_df[train_df["label"] != 0 and train_df["label"] != 2]
+            rest = train_df[train_df["label"] != 0 & train_df["label"] != 2]
 
             # extend chatgpt data with human data
             val_df = pd.concat([cohere, human])
@@ -72,7 +72,7 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_davinci_split":
             davinci = train_df[train_df["label"] == 3]
-            rest = train_df[train_df["label"] != 0 and train_df["label"] != 3]
+            rest = train_df[train_df["label"] != 0 & train_df["label"] != 3]
 
             # extend chatgpt data with human data
             val_df = pd.concat([davinci, human])
@@ -82,7 +82,7 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_bloomz_split":
             bloomz = train_df[train_df["label"] == 4]
-            rest = train_df[train_df["label"] != 0 and train_df["label"] != 4]
+            rest = train_df[train_df["label"] != 0 & train_df["label"] != 4]
 
             # extend chatgpt data with human data
             val_df = pd.concat([bloomz, human])
@@ -92,7 +92,7 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_dooly_split":
             dooly = train_df[train_df["label"] == 5]
-            rest = train_df[train_df["label"] != 0 and train_df["label"] != 5]
+            rest = train_df[train_df["label"] != 0 & train_df["label"] != 5]
 
             # extend chatgpt data with human data
             val_df = pd.concat([dooly, human])
@@ -101,16 +101,16 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
             train_df = pd.concat([rest, human_rest])
 
     experiment.log_table(
-        "train_value_counts", train_df["model"].value_counts().to_frame()
+        "train_value_counts.csv", train_df["model"].value_counts().to_frame()
     )
-    experiment.log_table("val_value_counts", val_df["model"].value_counts().to_frame())
+    experiment.log_table("val_value_counts.csv", val_df["model"].value_counts().to_frame())
     experiment.log_table(
-        "test_value_counts", test_df["model"].value_counts().to_frame()
+        "test_value_counts.csv", test_df["model"].value_counts().to_frame()
     )
 
-    experiment.log_table("train_meta", train_df.describe(include="all"))
-    experiment.log_table("val_meta", val_df.describe(include="all"))
-    experiment.log_table("test_meta", test_df.describe(include="all"))
+    experiment.log_table("train_meta.csv", train_df.describe(include="all"))
+    experiment.log_table("val_meta.csv", val_df.describe(include="all"))
+    experiment.log_table("test_meta.csv", test_df.describe(include="all"))
 
     return train_df, val_df, test_df
 
