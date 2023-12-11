@@ -68,6 +68,8 @@ if __name__ == "__main__":
         "--feat_perplexity", "-fperp", help="Feature perplexity", default=True
     )
 
+    parser.add_argument("--batch_size", "-bs", help="Batch size", default=16)
+    parser.add_argument("--epochs", "-e", help="Epochs", default=20, type=int)
     args = parser.parse_args()
 
     device = (
@@ -83,6 +85,7 @@ if __name__ == "__main__":
     prediction_path = (
         args.prediction_file_path
     )  # For example subtaskB_predictions.jsonl
+    batch_size = args.batch_size
 
     if not os.path.exists(train_path):
         logging.error("File doesnt exists: {}".format(train_path))
@@ -121,14 +124,22 @@ if __name__ == "__main__":
     random.seed(10)
     torch.manual_seed(10)
     np.random.seed(0)
-    
-    out_path = pathlib.Path("/home/huseyin/repo/code") / "out"
+
+    out_path = pathlib.Path(".") / "out"
+
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
 
     train_df, valid_df, test_df = get_data(train_path, test_path, random_seed)
 
-    train_df = train_df.head(128)
-    valid_df = valid_df.head(128)
-    test_df = test_df.head(128)
+    # for testing purposes
+    # train_df = train_df.head(128)
+    # valid_df = valid_df.head(128)
+    # test_df = test_df.head(128)
+
+    train_df = train_df
+    valid_df = valid_df
+    test_df = test_df
 
     train_documents = train_df["text"].tolist()
     valid_documents = valid_df["text"].tolist()
@@ -138,12 +149,10 @@ if __name__ == "__main__":
     dev_ids = [str(x) for x in valid_df["id"].tolist()]
     test_ids = [str(x) for x in test_df["id"].tolist()]
 
-    # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2")
+    # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2", batch_size=batch_size)
     pred_feature = PredictabilityFeature(
-        device=device, local_device=local_device, language="en"
+        device=device, local_device=local_device, language="en", batch_size=batch_size
     )
-    # grammar_feature = GrammarFeatures(device=device, local_device=local_device, language="en")
-    # word_freq_feature = WordFrequency(device=device, local_device=local_device, language="en")
 
     #  Add your features instances
 
@@ -169,7 +178,6 @@ if __name__ == "__main__":
         dev_Y = np.array([label2id[x] for x in valid_df["label"].tolist()])
 
     print("Building a model...")
-    BATCH_SIZE = 16
     train_dataset = TensorDataset(
         torch.tensor(train_X).float(),
         torch.tensor(np.array(train_Y)).long(),
@@ -182,18 +190,17 @@ if __name__ == "__main__":
         torch.tensor(test_X).float(),
         torch.tensor(np.zeros(len(test_documents))).long(),
     )
-    train_loader = DataLoader(train_dataset, shuffle=False, batch_size=BATCH_SIZE)
-    dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=BATCH_SIZE)
-    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=BATCH_SIZE)
+    train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
+    dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
     model = BiLSTM(train_X.shape[2], "A", local_device).to(device)
 
     language = "en"
 
-    
     stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
     model_type = "bilstm"
-    
+
     print("Preparing training")
     model = model.to(device)
     learning_rate = 1e-3
@@ -205,7 +212,7 @@ if __name__ == "__main__":
     stats_file.write("epoch\ttrain_F1\tdev_F1\n")
 
     eval_loop(dev_loader, model, device, local_device, skip_visual)
-    for epoch in range(20):
+    for epoch in range(args.epochs):
         print("EPOCH " + str(epoch + 1))
 
         train_f1 = train_loop(
