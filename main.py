@@ -133,13 +133,9 @@ if __name__ == "__main__":
     train_df, valid_df, test_df = get_data(train_path, test_path, random_seed)
 
     # for testing purposes
-    # train_df = train_df.head(128)
-    # valid_df = valid_df.head(128)
-    # test_df = test_df.head(128)
-
-    train_df = train_df
-    valid_df = valid_df
-    test_df = test_df
+    train_df = train_df.head(128)
+    valid_df = valid_df.head(128)
+    test_df = test_df.head(128)
 
     train_documents = train_df["text"].tolist()
     valid_documents = valid_df["text"].tolist()
@@ -176,10 +172,10 @@ if __name__ == "__main__":
         # Remove it later:
         test_Y = np.array(test_df["label"].tolist())
     elif subtask == "B":
-        train_Y = np.array([label2id[x] for x in train_df["label"].tolist()])
-        dev_Y = np.array([label2id[x] for x in valid_df["label"].tolist()])
+        train_Y = np.array(train_df["label"].tolist())
+        dev_Y = np.array(valid_df["label"].tolist())
         # Remove it later:
-        test_Y = np.array(label2id["human"] * len(test_df["label"].tolist()))
+        test_Y = np.array(test_df["label"].tolist())
 
     print("Building a model...")
     train_dataset = TensorDataset(
@@ -199,7 +195,7 @@ if __name__ == "__main__":
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
-    model = BiLSTM(train_X.shape[2], "A", local_device).to(device)
+    model = BiLSTM(train_X.shape[2], subtask, local_device).to(device)
 
     language = "en"
 
@@ -239,6 +235,7 @@ if __name__ == "__main__":
             str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1) + "\n"
         )
 
+
         with open(
             out_path / (subtask + "_" + language + "_preds_" + str(epoch + 1) + ".tsv"),
             "w",
@@ -246,9 +243,9 @@ if __name__ == "__main__":
             f.write("id\tlabel\n")
             for test_id, pred in zip(test_ids, test_preds):
                 label = (
-                    ["human", "generated"][pred]
+                    ["human", "machine"][pred]
                     if subtask == "A"
-                    else ["A", "B", "C", "D", "E", "F"][pred]
+                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"][pred]
                 )
                 f.write(test_id + "\t" + label + "\n")
 
@@ -260,9 +257,9 @@ if __name__ == "__main__":
             f.write(
                 "id\t"
                 + "\t".join(
-                    ["human", "generated"]
+                    ["human", "machine"]
                     if subtask == "A"
-                    else ["A", "B", "C", "D", "E", "F"]
+                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"]
                 )
                 + "\n"
             )
@@ -283,9 +280,9 @@ if __name__ == "__main__":
             f.write(
                 "id\t"
                 + "\t".join(
-                    ["human", "generated"]
+                    ["human", "machine"]
                     if subtask == "A"
-                    else ["A", "B", "C", "D", "E", "F"]
+                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"]
                 )
                 + "\n"
             )
