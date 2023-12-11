@@ -223,7 +223,7 @@ if __name__ == "__main__":
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
-    model = BiLSTM(train_X.shape[2], subtask, local_device).to(device)
+    model = BiLSTM(train_X.shape[2], subtask, local_device)
 
     language = "en"
 
@@ -232,7 +232,6 @@ if __name__ == "__main__":
 
     print("Preparing training")
     log_model(experiment, "Model", model)
-
     model = model.to(device)
     learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
