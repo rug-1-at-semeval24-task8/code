@@ -125,7 +125,7 @@ if __name__ == "__main__":
     torch.manual_seed(10)
     np.random.seed(0)
 
-    out_path = pathlib.Path(".") / "out"
+    out_path = pathlib.Path(".") / prediction_path
 
     if not os.path.exists(out_path):
         os.makedirs(out_path)
