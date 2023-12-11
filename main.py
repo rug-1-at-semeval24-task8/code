@@ -268,8 +268,8 @@ if __name__ == "__main__":
             train_loader, model, optimizer, scheduler, device, local_device, skip_visual
         )
 
-        experiment.set_metric("train_loss", train_loss)
-        experiment.set_metric("train_f1", train_f1)
+        experiment.log_metric("train_loss", train_loss)
+        experiment.log_metric("train_f1", train_f1)
 
         test_preds, test_probs = eval_loop(
             test_loader, model, device, local_device, skip_visual, test=True
@@ -280,18 +280,18 @@ if __name__ == "__main__":
             dev_loader, model, device, local_device, skip_visual, test=False
         )
 
-        experiment.set_metric("dev_f1_macro", dev_f1_macro)
-        experiment.set_metric("dev_f1_micro", dev_f1_micro)
-        experiment.set_metric("dev_loss", dev_loss)
+        experiment.log_metric("dev_f1_macro", dev_f1_macro)
+        experiment.log_metric("dev_f1_micro", dev_f1_micro)
+        experiment.log_metric("dev_loss", dev_loss)
 
         print("Test set evaluation")
         test_f1_micro, test_f1_macro, test_loss = eval_loop(
             test_loader, model, device, local_device, skip_visual, test=False
         )
 
-        experiment.set_metric("test_f1_macro", test_f1_macro)
-        experiment.set_metric("test_f1_micro", test_f1_micro)
-        experiment.set_metric("test_loss", test_loss)
+        experiment.log_metric("test_f1_macro", test_f1_macro)
+        experiment.log_metric("test_f1_micro", test_f1_micro)
+        experiment.log_metric("test_loss", test_loss)
 
         stats_file.write(
             str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1_micro) + "\n"
