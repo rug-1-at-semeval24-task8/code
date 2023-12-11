@@ -19,6 +19,7 @@ from bilstm import BiLSTM
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
 from training import eval_loop, train_loop
+from comet_ml.integration.pytorch import log_model
 
 experiment = Experiment(
   api_key="nLqFerDLnwvCiAptbL4u0FZIj",
@@ -229,6 +230,8 @@ if __name__ == "__main__":
     model_type = "bilstm"
 
     print("Preparing training")
+    log_model(experiment, "Model", model)
+
     model = model.to(device)
     learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
