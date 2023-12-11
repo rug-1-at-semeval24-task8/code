@@ -173,9 +173,13 @@ if __name__ == "__main__":
     if subtask == "A":
         train_Y = np.array(train_df["label"].tolist())
         dev_Y = np.array(valid_df["label"].tolist())
+        # Remove it later:
+        test_Y = np.array(test_df["label"].tolist())
     elif subtask == "B":
         train_Y = np.array([label2id[x] for x in train_df["label"].tolist()])
         dev_Y = np.array([label2id[x] for x in valid_df["label"].tolist()])
+        # Remove it later:
+        test_Y = np.array(label2id["human"] * len(test_df["label"].tolist()))
 
     print("Building a model...")
     train_dataset = TensorDataset(
@@ -188,7 +192,8 @@ if __name__ == "__main__":
     )
     test_dataset = TensorDataset(
         torch.tensor(test_X).float(),
-        torch.tensor(np.zeros(len(test_documents))).long(),
+        #torch.tensor(np.zeros(len(test_documents))).long(),
+        torch.tensor(np.array(test_Y)).long(),
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
@@ -218,11 +223,16 @@ if __name__ == "__main__":
         train_f1 = train_loop(
             train_loader, model, optimizer, scheduler, device, local_device, skip_visual
         )
+        test_preds, test_probs = eval_loop(
+            test_loader, model, device, local_device, skip_visual, test=True
+        )
+        print("Development set evaluation")
         dev_f1 = eval_loop(
             dev_loader, model, device, local_device, skip_visual, test=False
         )
+        print("Test set evaluation")
         test_preds, test_probs = eval_loop(
-            test_loader, model, device, local_device, skip_visual, test=True
+            test_loader, model, device, local_device, skip_visual, test=False
         )
 
         stats_file.write(

@@ -65,8 +65,10 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     true_Y = np.concatenate(true_Y)
     if not test:
         print('Accuracy: ' + str(correct / size))
-        f1 = f1_score(y_true=true_Y, y_pred=preds, average="micro")
-        print('F1 score: ' + str(f1))
-        return f1
+        f1_micro = f1_score(y_true=true_Y, y_pred=preds, average="micro")
+        f1_macro = f1_score(y_true=true_Y, y_pred=preds, average="macro")
+        print('F1-micro score: ' + str(f1_micro))
+        print('F1-macro score: ' + str(f1_macro))
+        return f1_micro
     else:
         return preds, probs
