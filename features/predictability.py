@@ -6,14 +6,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from features.base import FeatureGenerator
 
 FIXED_LEN = 64
-BATCH_SIZE = 16
 eps = 1e-40
 
 class PredictabilityFeature(FeatureGenerator):
-    def __init__(self, device, local_device, language):
+    def __init__(self, device, local_device, language, batch_size):
         self.device = device
         self.local_device = local_device
         self.language = language
+        self.batch_size = batch_size
         if language == 'en':
             self.models = ["gpt2"]
         else:
@@ -33,7 +33,7 @@ class PredictabilityFeature(FeatureGenerator):
             model.to(self.device)
 
 
-            batches = [sentences[i:i + BATCH_SIZE] for i in range(0, len(sentences), BATCH_SIZE)]
+            batches = [sentences[i:i + self.batch_size] for i in range(0, len(sentences), self.batch_size)]
             progress_bar = tqdm(range(len(batches)), ascii=True)
             with torch.no_grad():
                 for i_b, batch in enumerate(batches):
@@ -64,22 +64,22 @@ class PredictabilityFeature(FeatureGenerator):
                     # Store the mask data
                     mask = np.array([x.to(self.local_device).numpy() for x in encodings['attention_mask']])
                     if i_m == 0:
-                        results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1], 0] = mask
+                        results[(i_b * self.batch_size):(i_b * self.batch_size + len(batch)), :mask.shape[1], 0] = mask
                     # Store the data
                     # Output per-token results
-                    results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
+                    results[(i_b * self.batch_size):(i_b * self.batch_size + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 1] = log_probs_seen * mask
-                    results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
+                    results[(i_b * self.batch_size):(i_b * self.batch_size + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 2] = log_probs_greedy * mask
-                    results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
+                    results[(i_b * self.batch_size):(i_b * self.batch_size + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 3] = entropy * mask
                     # Output aggregated results
                     for i in range(len(batch)):
-                        aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM] = np.mean(
+                        aggregated_results[i_b * self.batch_size + i, i_m * FEATURE_NUM] = np.mean(
                             log_probs_seen[i, mask[i] == 1])
-                        aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM + 1] = np.mean(
+                        aggregated_results[i_b * self.batch_size + i, i_m * FEATURE_NUM + 1] = np.mean(
                             log_probs_greedy[i, mask[i] == 1])
-                        aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM + 2] = np.mean(
+                        aggregated_results[i_b * self.batch_size + i, i_m * FEATURE_NUM + 2] = np.mean(
                             entropy[i, mask[i] == 1])
                     progress_bar.update(1)
         return results
