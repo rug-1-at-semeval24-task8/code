@@ -51,6 +51,7 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
         for XY in dataloader:
             XY = [xy.to(device) for xy in XY]
             Xs = XY[:-1]
+            expected = XY[-1].detach().clone()
             Y = XY[-1].to(local_device)
             output = model(*Xs)
             pred = model.postprocessing(output, argmax=True)
@@ -62,7 +63,7 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
             eq = np.equal(Y, pred)
             size += len(eq)
             correct += sum(eq)
-            loss = model.compute_loss(output, Y)
+            loss = model.compute_loss(output, expected)
             losses.append(loss.detach().to(local_device).numpy())
             progress_bar.update(1)
     preds = np.concatenate(preds)
