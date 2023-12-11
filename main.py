@@ -227,7 +227,7 @@ if __name__ == "__main__":
             dev_loader, model, device, local_device, skip_visual, test=False
         )
         print("Test set evaluation")
-        test_preds, test_probs = eval_loop(
+        _ = eval_loop(
             test_loader, model, device, local_device, skip_visual, test=False
         )
 
