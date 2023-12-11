@@ -224,14 +224,14 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
     model = BiLSTM(train_X.shape[2], subtask, local_device)
-
+    log_model(experiment, model, "BiLSTM")
     language = "en"
 
     stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
     model_type = "bilstm"
 
     print("Preparing training")
-    log_model(experiment, "Model", model)
+    
     model = model.to(device)
     learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
@@ -324,5 +324,5 @@ if __name__ == "__main__":
                 train_ids + dev_ids, [x for x in train_probs] + [x for x in dev_probs]
             ):
                 f.write(test_id + "\t" + "\t".join([str(x) for x in prob]) + "\n")
-
+    
     stats_file.close()
