@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--batch_size", "-bs", help="Batch size", default=16)
     parser.add_argument("--epochs", "-e", help="Epochs", default=20, type=int)
+    parser.add_argument("--fixed_length", "-fl", help="Fixed length", default=128, type=int)
+    parser.add_argument("--seed", "-s", help="Seed", default=10, type=int)
     args = parser.parse_args()
 
     device = (
@@ -77,7 +79,7 @@ if __name__ == "__main__":
     )
     local_device = torch.device("cpu")
 
-    random_seed = 0
+    random_seed = args.seed
     train_path = args.train_file_path  # For example 'subtaskA_train_multilingual.jsonl'
     test_path = args.test_file_path  # For example 'subtaskA_test_multilingual.jsonl'
     model = args.model  # For example 'xlm-roberta-base'
@@ -120,10 +122,10 @@ if __name__ == "__main__":
         raise ValueError("Wrong subtask: {}. It should be A or B".format(train_path))
 
     set_seed(random_seed)
-    torch.manual_seed(10)
-    random.seed(10)
-    torch.manual_seed(10)
-    np.random.seed(0)
+    torch.manual_seed(random_seed)
+    random.seed(random_seed)
+    torch.manual_seed(random_seed)
+    np.random.seed(random_seed)
 
     out_path = pathlib.Path(".") / prediction_path
 
@@ -145,9 +147,9 @@ if __name__ == "__main__":
     dev_ids = [str(x) for x in valid_df["id"].tolist()]
     test_ids = [str(x) for x in test_df["id"].tolist()]
 
-    # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2", batch_size=batch_size)
+    # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2", batch_size=batch_size, fixed_length=args.fixed_length)
     pred_feature = PredictabilityFeature(
-        device=device, local_device=local_device, language="en", batch_size=batch_size
+        device=device, local_device=local_device, language="en", batch_size=batch_size, fixed_length=args.fixed_length
     )
 
     #  Add your features instances

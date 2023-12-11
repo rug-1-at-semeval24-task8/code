@@ -5,11 +5,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from features.base import FeatureGenerator
 
-FIXED_LEN = 64
-
 class PerplexityFeature(FeatureGenerator):
-    def __init__(self, device, local_device, model_id, batch_size):
+    def __init__(self, device, local_device, model_id, batch_size, fixed_length):
         self.device = device
+        self.fixed_length = fixed_length
         self.model_id = model_id
         self.local_device = local_device
         self.batch_size = batch_size
@@ -25,7 +24,7 @@ class PerplexityFeature(FeatureGenerator):
         progress_bar = tqdm(range(len(batches)), ascii=True)
         with torch.no_grad():
             for i_b, batch in enumerate(batches):
-                encodings = tokenizer(batch, return_tensors="pt",  max_length=FIXED_LEN, truncation=True, padding=True)
+                encodings = tokenizer(batch, return_tensors="pt",  max_length=self.fixed_length, truncation=True, padding=True)
                 loss = model(input_ids=encodings["input_ids"], labels=encodings["input_ids"]).loss
             
                 ppl = torch.exp(loss)

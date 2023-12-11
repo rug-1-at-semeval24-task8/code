@@ -5,12 +5,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from features.base import FeatureGenerator
 
-FIXED_LEN = 64
 eps = 1e-40
 
 class PredictabilityFeature(FeatureGenerator):
-    def __init__(self, device, local_device, language, batch_size):
+    def __init__(self, device, local_device, language, batch_size, fixed_length):
         self.device = device
+        self.fixed_length = fixed_length
         self.local_device = local_device
         self.language = language
         self.batch_size = batch_size
@@ -21,7 +21,7 @@ class PredictabilityFeature(FeatureGenerator):
 
     def features(self, sentences):
         FEATURE_NUM = 3
-        results = np.zeros((len(sentences), FIXED_LEN, FEATURE_NUM * len(self.models) + 1))
+        results = np.zeros((len(sentences), self.fixed_length, FEATURE_NUM * len(self.models) + 1))
         reference_tokenisations = {}
         aggregated_results = np.zeros((len(sentences), FEATURE_NUM * len(self.models)))
         for i_m, model_id in enumerate(self.models):
@@ -37,7 +37,7 @@ class PredictabilityFeature(FeatureGenerator):
             progress_bar = tqdm(range(len(batches)), ascii=True)
             with torch.no_grad():
                 for i_b, batch in enumerate(batches):
-                    encodings = tokenizer(batch, padding=True, truncation=True, max_length=FIXED_LEN,
+                    encodings = tokenizer(batch, padding=True, truncation=True, max_length=self.fixed_length,
                                           return_offsets_mapping=True, return_tensors="pt")
                     encodings['input_ids'][encodings['input_ids'] >= 1000] = 0
                     if i_m == 0:
