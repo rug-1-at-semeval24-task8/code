@@ -4,7 +4,9 @@ from sklearn.metrics import f1_score
 from tqdm.auto import tqdm
 
 
-def train_loop(dataloader, model, optimizer, scheduler, device, local_device, skip_visual=False):
+def train_loop(
+    dataloader, model, optimizer, scheduler, device, local_device, skip_visual=False
+):
     print("Training...")
     model.train()
     progress_bar = tqdm(range(len(dataloader)), ascii=True, disable=skip_visual)
@@ -25,10 +27,10 @@ def train_loop(dataloader, model, optimizer, scheduler, device, local_device, sk
         losses.append(loss.detach().to(local_device).numpy())
         progress_bar.update(1)
     scheduler.step()
-    print('Train loss: ' + str(np.mean(losses)))
+    print("Train loss: " + str(np.mean(losses)))
     preds = np.concatenate(preds)
     true_Y = np.concatenate(true_Y)
-    f1 = f1_score(y_true=true_Y, y_pred=preds, average="macro")
+    f1 = f1_score(y_true=true_Y, y_pred=preds, average="macro", zero_division=1)
     return f1
 
 
@@ -50,7 +52,7 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
             Xs = XY[:-1]
             Y = XY[-1].to(local_device)
             output = model(*Xs)
-            pred = model.postprocessing(output, argmax = True)
+            pred = model.postprocessing(output, argmax=True)
             preds.append(pred)
             prob = np.exp(model.postprocessing(output, argmax=False))
             probs.append(prob)
@@ -64,11 +66,11 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     probs = np.concatenate(probs)
     true_Y = np.concatenate(true_Y)
     if not test:
-        print('Accuracy: ' + str(correct / size))
-        f1_micro = f1_score(y_true=true_Y, y_pred=preds, average="micro")
-        f1_macro = f1_score(y_true=true_Y, y_pred=preds, average="macro")
-        print('F1-micro score: ' + str(f1_micro))
-        print('F1-macro score: ' + str(f1_macro))
+        print("Accuracy: " + str(correct / size))
+        f1_micro = f1_score(y_true=true_Y, y_pred=preds, average="micro", zero_division=1)
+        f1_macro = f1_score(y_true=true_Y, y_pred=preds, average="macro", zero_division=1)
+        print("F1-micro score: " + str(f1_micro))
+        print("F1-macro score: " + str(f1_macro))
         return f1_micro
     else:
         return preds, probs
