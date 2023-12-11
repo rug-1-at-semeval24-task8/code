@@ -8,12 +8,13 @@ from features.base import FeatureGenerator
 eps = 1e-40
 
 class PredictabilityFeature(FeatureGenerator):
-    def __init__(self, device, local_device, language, batch_size, fixed_length):
+    def __init__(self, device, local_device, language, batch_size, fixed_length, experiment):
         self.device = device
         self.fixed_length = fixed_length
         self.local_device = local_device
         self.language = language
         self.batch_size = batch_size
+        self.experiment = experiment
         if language == 'en':
             self.models = ["gpt2"]
         else:

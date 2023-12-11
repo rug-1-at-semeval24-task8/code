@@ -31,7 +31,7 @@ def train_loop(
     preds = np.concatenate(preds)
     true_Y = np.concatenate(true_Y)
     f1 = f1_score(y_true=true_Y, y_pred=preds, average="macro", zero_division=1)
-    return f1
+    return np.mean(losses), f1
 
 
 def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=False):

@@ -7,6 +7,8 @@ import random
 import numpy as np
 import pandas as pd
 import torch
+from comet_ml import Experiment
+from comet_ml.integration.pytorch import log_model
 from sklearn.model_selection import train_test_split
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
@@ -18,6 +20,11 @@ from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
 from training import eval_loop, train_loop
 
+experiment = Experiment(
+  api_key="nLqFerDLnwvCiAptbL4u0FZIj",
+  project_name="shared-task",
+  workspace="halecakir"
+)
 
 def get_data(train_path, test_path, random_seed):
     """
@@ -98,6 +105,9 @@ if __name__ == "__main__":
     )  # For example subtaskB_predictions.jsonl
     batch_size = args.batch_size
 
+    # LOG PARAMETERS
+    experiment.log_parameters(vars(args))
+
     if not os.path.exists(train_path):
         logging.error("File doesnt exists: {}".format(train_path))
         raise ValueError("File doesnt exists: {}".format(train_path))
@@ -163,6 +173,7 @@ if __name__ == "__main__":
         language="en",
         batch_size=args.batch_size_feature_extraction,
         fixed_length=args.fixed_length,
+        experiment=experiment,
     )
 
     #  Add your features instances
@@ -229,21 +240,27 @@ if __name__ == "__main__":
 
     eval_loop(dev_loader, model, device, local_device, skip_visual)
     for epoch in range(args.epochs):
+        experiment.set_epoch(epoch+1)
         print("EPOCH " + str(epoch + 1))
 
-        train_f1 = train_loop(
+        loss, train_f1 = train_loop(
             train_loader, model, optimizer, scheduler, device, local_device, skip_visual
         )
+    
+
         test_preds, test_probs = eval_loop(
             test_loader, model, device, local_device, skip_visual, test=True
         )
+        
         print("Development set evaluation")
         dev_f1 = eval_loop(
             dev_loader, model, device, local_device, skip_visual, test=False
         )
+        
         print("Test set evaluation")
-        _ = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
+        test_f1 = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
 
+        
         stats_file.write(
             str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1) + "\n"
         )
