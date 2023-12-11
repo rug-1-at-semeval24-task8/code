@@ -1,9 +1,9 @@
-from features.base import FeatureGenerator
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from tqdm.auto import tqdm
-import torch
 import numpy as np
+import torch
+from tqdm.auto import tqdm
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from features.base import FeatureGenerator
 
 FIXED_LEN = 64
 BATCH_SIZE = 16
