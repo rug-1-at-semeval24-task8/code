@@ -47,12 +47,14 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
     else:
         human = train_df[train_df["model"] == "human"]
         human, human_rest = train_test_split(
-            human, test_size=0.5, random_state=random_seed
+            human, test_size=0.5, random_state=random_seed,
         )
 
         if data_split_strategy == "human_chatgpt_split":
             chatgpt = train_df[train_df["model"] == "chatGPT"]
-            rest = train_df[(train_df["model"] != "chatGPT") & (train_df["model"] != "human")]
+            rest = train_df[
+                (train_df["model"] != "chatGPT") & (train_df["model"] != "human")
+            ]
 
             # extend chatgpt data with human data
             val_df = pd.concat([chatgpt, human])
@@ -62,7 +64,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_cohere_split":
             cohere = train_df[train_df["model"] == "cohere"]
-            rest = train_df[(train_df["model"] != "human") & (train_df["model"] != "cohere")]
+            rest = train_df[
+                (train_df["model"] != "human") & (train_df["model"] != "cohere")
+            ]
 
             # extend chatgpt data with human data
             val_df = pd.concat([cohere, human])
@@ -72,7 +76,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_davinci_split":
             davinci = train_df[train_df["model"] == "davinci"]
-            rest = train_df[(train_df["model"] != "human") & (train_df["model"] != "davinci")]
+            rest = train_df[
+                (train_df["model"] != "human") & (train_df["model"] != "davinci")
+            ]
 
             # extend chatgpt data with human data
             val_df = pd.concat([davinci, human])
@@ -82,7 +88,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_bloomz_split":
             bloomz = train_df[train_df["model"] == "bloomz"]
-            rest = train_df[(train_df["model"] != "human") & (train_df["model"] != "bloomz")]
+            rest = train_df[
+                (train_df["model"] != "human") & (train_df["model"] != "bloomz")
+            ]
 
             # extend chatgpt data with human data
             val_df = pd.concat([bloomz, human])
@@ -92,7 +100,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
         if data_split_strategy == "human_dooly_split":
             dooly = train_df[train_df["model"] == "dooly"]
-            rest = train_df[(train_df["model"] != "dooly") & (train_df["model"] != "human")]
+            rest = train_df[
+                (train_df["model"] != "dooly") & (train_df["model"] != "human")
+            ]
 
             # extend chatgpt data with human data
             val_df = pd.concat([dooly, human])
@@ -103,7 +113,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
     experiment.log_table(
         "train_value_counts.csv", train_df["model"].value_counts().to_frame()
     )
-    experiment.log_table("val_value_counts.csv", val_df["model"].value_counts().to_frame())
+    experiment.log_table(
+        "val_value_counts.csv", val_df["model"].value_counts().to_frame()
+    )
     experiment.log_table(
         "test_value_counts.csv", test_df["model"].value_counts().to_frame()
     )
@@ -255,7 +267,9 @@ if __name__ == "__main__":
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
-    train_df, valid_df, test_df = get_data(train_path, test_path, random_seed, args.data_split_strategy)
+    train_df, valid_df, test_df = get_data(
+        train_path, test_path, random_seed, args.data_split_strategy
+    )
 
     # for testing purposes
     if args.data_size > 0:
