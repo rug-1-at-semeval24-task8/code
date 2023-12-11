@@ -1,9 +1,10 @@
-from features.base import FeatureGenerator
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast, AutoTokenizer, AutoModelForCausalLM
-import tqdm
-import torch
 import numpy as np
+import torch
+import tqdm
+from transformers import (AutoModelForCausalLM, AutoTokenizer, GPT2LMHeadModel,
+                          GPT2TokenizerFast)
 
+from features.base import FeatureGenerator
 
 FIXED_LEN = 64
 BATCH_SIZE = 16

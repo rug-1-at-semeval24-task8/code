@@ -5,6 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from features.base import FeatureGenerator
 
+
 class PerplexityFeature(FeatureGenerator):
     def __init__(self, device, local_device, model_id, batch_size, fixed_length):
         self.device = device

@@ -1,3 +1,4 @@
+import comet_ml #NOTE : Always import comet_ml in the top of your file
 import argparse
 import logging
 import os
