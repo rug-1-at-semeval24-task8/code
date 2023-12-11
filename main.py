@@ -14,10 +14,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from transformers import set_seed
 
 from bilstm import BiLSTM
-from features.grammar import GrammarFeatures
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
-from features.word_freq import WordFrequency
 from training import eval_loop, train_loop
 
 
