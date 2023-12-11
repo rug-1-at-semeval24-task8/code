@@ -69,8 +69,17 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("--batch_size", "-bs", help="Batch size", default=16)
+    parser.add_argument(
+        "--batch_size_feature_extraction",
+        "-bsfe",
+        help="Batch size",
+        default=128,
+        type=int,
+    )
     parser.add_argument("--epochs", "-e", help="Epochs", default=20, type=int)
-    parser.add_argument("--fixed_length", "-fl", help="Fixed length", default=128, type=int)
+    parser.add_argument(
+        "--fixed_length", "-fl", help="Fixed length", default=128, type=int
+    )
     parser.add_argument("--seed", "-s", help="Seed", default=10, type=int)
     args = parser.parse_args()
 
@@ -149,7 +158,11 @@ if __name__ == "__main__":
 
     # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2", batch_size=batch_size, fixed_length=args.fixed_length)
     pred_feature = PredictabilityFeature(
-        device=device, local_device=local_device, language="en", batch_size=batch_size, fixed_length=args.fixed_length
+        device=device,
+        local_device=local_device,
+        language="en",
+        batch_size=args.batch_size_feature_extraction,
+        fixed_length=args.fixed_length,
     )
 
     #  Add your features instances
@@ -190,7 +203,7 @@ if __name__ == "__main__":
     )
     test_dataset = TensorDataset(
         torch.tensor(test_X).float(),
-        #torch.tensor(np.zeros(len(test_documents))).long(),
+        # torch.tensor(np.zeros(len(test_documents))).long(),
         torch.tensor(np.array(test_Y)).long(),
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
@@ -229,14 +242,11 @@ if __name__ == "__main__":
             dev_loader, model, device, local_device, skip_visual, test=False
         )
         print("Test set evaluation")
-        _ = eval_loop(
-            test_loader, model, device, local_device, skip_visual, test=False
-        )
+        _ = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
 
         stats_file.write(
             str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1) + "\n"
         )
-
 
         with open(
             out_path / (subtask + "_" + language + "_preds_" + str(epoch + 1) + ".tsv"),
@@ -247,7 +257,9 @@ if __name__ == "__main__":
                 label = (
                     ["human", "machine"][pred]
                     if subtask == "A"
-                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"][pred]
+                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"][
+                        pred
+                    ]
                 )
                 f.write(test_id + "\t" + label + "\n")
 
