@@ -27,7 +27,9 @@ experiment = Experiment(
 )
 
 
-def get_data(train_path, test_path, random_seed, data_split_strategy):
+def get_data(
+    train_path, test_path, random_seed, data_split_strategy, data_split_strategy_reverse
+):
     """
     function to read dataframe with columns
     """
@@ -42,12 +44,12 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
             stratify=train_df["label"],
             random_state=random_seed,
         )
-
-        return train_df, val_df, test_df
     else:
         human = train_df[train_df["model"] == "human"]
         human, human_rest = train_test_split(
-            human, test_size=0.5, random_state=random_seed,
+            human,
+            test_size=0.5,
+            random_state=random_seed,
         )
 
         if data_split_strategy == "human_chatgpt_split":
@@ -109,6 +111,9 @@ def get_data(train_path, test_path, random_seed, data_split_strategy):
 
             # extend rest data with human data
             train_df = pd.concat([rest, human_rest])
+
+    if data_split_strategy_reverse:
+        val_df, test_df = test_df, val_df
 
     experiment.log_table(
         "train_value_counts.csv", train_df["model"].value_counts().to_frame()
@@ -203,6 +208,13 @@ if __name__ == "__main__":
             "human_dooly_split",
         ],
     )
+    parser.add_argument(
+        "--data_split_strategy_reverse",
+        "-dssr",
+        default=False,
+        help="Reverse the dev data with test data",
+        action=argparse.BooleanOptionalAction,
+    )
     args = parser.parse_args()
 
     device = (
@@ -268,7 +280,11 @@ if __name__ == "__main__":
         os.makedirs(out_path)
 
     train_df, valid_df, test_df = get_data(
-        train_path, test_path, random_seed, args.data_split_strategy
+        train_path,
+        test_path,
+        random_seed,
+        args.data_split_strategy,
+        args.data_split_strategy_reverse,
     )
 
     # for testing purposes
