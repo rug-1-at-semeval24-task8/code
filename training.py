@@ -46,6 +46,7 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     preds = []
     probs = []
     true_Y = []
+    losses = []
     with torch.no_grad():
         for XY in dataloader:
             XY = [xy.to(device) for xy in XY]
@@ -61,6 +62,8 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
             eq = np.equal(Y, pred)
             size += len(eq)
             correct += sum(eq)
+            loss = model.compute_loss(output, Y)
+            losses.append(loss.detach().to(local_device).numpy())
             progress_bar.update(1)
     preds = np.concatenate(preds)
     probs = np.concatenate(probs)
@@ -71,6 +74,6 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
         f1_macro = f1_score(y_true=true_Y, y_pred=preds, average="macro", zero_division=1)
         print("F1-micro score: " + str(f1_micro))
         print("F1-macro score: " + str(f1_macro))
-        return f1_micro
+        return f1_micro, f1_macro, np.mean(losses)
     else:
         return preds, probs

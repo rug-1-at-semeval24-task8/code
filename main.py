@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import torch
 from comet_ml import Experiment
-from comet_ml.integration.pytorch import log_model
 from sklearn.model_selection import train_test_split
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
@@ -20,7 +19,6 @@ from bilstm import BiLSTM
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
 from training import eval_loop, train_loop
-from comet_ml.integration.pytorch import log_model
 
 experiment = Experiment(
   api_key="nLqFerDLnwvCiAptbL4u0FZIj",
@@ -224,7 +222,6 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
     model = BiLSTM(train_X.shape[2], subtask, local_device)
-    log_model(experiment, model, "BiLSTM")
     language = "en"
 
     stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
@@ -246,9 +243,12 @@ if __name__ == "__main__":
         experiment.set_epoch(epoch+1)
         print("EPOCH " + str(epoch + 1))
 
-        loss, train_f1 = train_loop(
+        train_loss, train_f1 = train_loop(
             train_loader, model, optimizer, scheduler, device, local_device, skip_visual
         )
+
+        experiment.set_metric("train_loss", train_loss)
+        experiment.set_metric("train_f1", train_f1)
     
 
         test_preds, test_probs = eval_loop(
@@ -256,16 +256,25 @@ if __name__ == "__main__":
         )
         
         print("Development set evaluation")
-        dev_f1 = eval_loop(
+        dev_f1_micro, dev_f1_macro, dev_loss = eval_loop(
             dev_loader, model, device, local_device, skip_visual, test=False
         )
+
+        experiment.set_metric("dev_f1_macro", dev_f1_macro)
+        experiment.set_metric("dev_f1_micro", dev_f1_micro)
+        experiment.set_metric("dev_loss", dev_loss)
+
         
         print("Test set evaluation")
-        test_f1 = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
+        test_f1_micro, test_f1_macro, test_loss = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
+
+        experiment.set_metric("test_f1_macro", test_f1_macro)
+        experiment.set_metric("test_f1_micro", test_f1_micro)
+        experiment.set_metric("test_loss", test_loss)
 
         
         stats_file.write(
-            str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1) + "\n"
+            str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1_micro) + "\n"
         )
 
         with open(
