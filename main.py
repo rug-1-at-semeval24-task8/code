@@ -1,4 +1,4 @@
-import comet_ml #NOTE : Always import comet_ml in the top of your file
+import comet_ml  # NOTE : Always import comet_ml in the top of your file
 import argparse
 import logging
 import os
@@ -21,10 +21,11 @@ from features.predictability import PredictabilityFeature
 from training import eval_loop, train_loop
 
 experiment = Experiment(
-  api_key="nLqFerDLnwvCiAptbL4u0FZIj",
-  project_name="shared-task",
-  workspace="halecakir"
+    api_key="nLqFerDLnwvCiAptbL4u0FZIj",
+    project_name="shared-task",
+    workspace="halecakir",
 )
+
 
 def get_data(train_path, test_path, random_seed):
     """
@@ -88,6 +89,15 @@ if __name__ == "__main__":
         "--fixed_length", "-fl", help="Fixed length", default=128, type=int
     )
     parser.add_argument("--seed", "-s", help="Seed", default=10, type=int)
+    parser.add_argument(
+        "--enable-preditability",
+        "-ep",
+        help="Enable predictability feature",
+        default=True,
+        type=bool,
+    )
+    parser.add_argument("--enable-perplexity", "-epp", help="Enable perplexity feature", default=False, type=bool)
+    parser.add_argument("--data-size", "-ds", help="Data size", default=-1, type=int)
     args = parser.parse_args()
 
     device = (
@@ -154,9 +164,10 @@ if __name__ == "__main__":
     train_df, valid_df, test_df = get_data(train_path, test_path, random_seed)
 
     # for testing purposes
-    train_df = train_df.head(128)
-    valid_df = valid_df.head(128)
-    test_df = test_df.head(128)
+    if args.data_size > 0:
+        train_df = train_df.head(args.data_size)
+        valid_df = valid_df.head(args.data_size)
+        test_df = test_df.head(args.data_size)
 
     train_documents = train_df["text"].tolist()
     valid_documents = valid_df["text"].tolist()
@@ -166,19 +177,29 @@ if __name__ == "__main__":
     dev_ids = [str(x) for x in valid_df["id"].tolist()]
     test_ids = [str(x) for x in test_df["id"].tolist()]
 
-    # pp_feature = PerplexityFeature(device=device, local_device=local_device, model_id="gpt2", batch_size=batch_size, fixed_length=args.fixed_length)
-    pred_feature = PredictabilityFeature(
-        device=device,
-        local_device=local_device,
-        language="en",
-        batch_size=args.batch_size_feature_extraction,
-        fixed_length=args.fixed_length,
-        experiment=experiment,
-    )
-
     #  Add your features instances
+    featurizers = []
 
-    featurizers = [pred_feature]  # extend list with your features
+    if args.enable_preditability:
+        pred_feature = PredictabilityFeature(
+            device=device,
+            local_device=local_device,
+            language="en",
+            batch_size=args.batch_size_feature_extraction,
+            fixed_length=args.fixed_length,
+            experiment=experiment,
+        )
+        featurizers.append(pred_feature)
+    if args.enable_perplexity:
+        pp_feature = PerplexityFeature(
+            device=device,
+            local_device=local_device,
+            model_id="gpt2",
+            batch_size=args.batch_size_feature_extraction,
+            fixed_length=args.fixed_length,
+            experiment=experiment,
+        )
+        featurizers.append(pp_feature)
 
     train_X = []
     dev_X = []
@@ -228,7 +249,7 @@ if __name__ == "__main__":
     model_type = "bilstm"
 
     print("Preparing training")
-    
+
     model = model.to(device)
     learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
@@ -240,7 +261,7 @@ if __name__ == "__main__":
 
     eval_loop(dev_loader, model, device, local_device, skip_visual)
     for epoch in range(args.epochs):
-        experiment.set_epoch(epoch+1)
+        experiment.set_epoch(epoch + 1)
         print("EPOCH " + str(epoch + 1))
 
         train_loss, train_f1 = train_loop(
@@ -249,12 +270,11 @@ if __name__ == "__main__":
 
         experiment.set_metric("train_loss", train_loss)
         experiment.set_metric("train_f1", train_f1)
-    
 
         test_preds, test_probs = eval_loop(
             test_loader, model, device, local_device, skip_visual, test=True
         )
-        
+
         print("Development set evaluation")
         dev_f1_micro, dev_f1_macro, dev_loss = eval_loop(
             dev_loader, model, device, local_device, skip_visual, test=False
@@ -264,15 +284,15 @@ if __name__ == "__main__":
         experiment.set_metric("dev_f1_micro", dev_f1_micro)
         experiment.set_metric("dev_loss", dev_loss)
 
-        
         print("Test set evaluation")
-        test_f1_micro, test_f1_macro, test_loss = eval_loop(test_loader, model, device, local_device, skip_visual, test=False)
+        test_f1_micro, test_f1_macro, test_loss = eval_loop(
+            test_loader, model, device, local_device, skip_visual, test=False
+        )
 
         experiment.set_metric("test_f1_macro", test_f1_macro)
         experiment.set_metric("test_f1_micro", test_f1_micro)
         experiment.set_metric("test_loss", test_loss)
 
-        
         stats_file.write(
             str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1_micro) + "\n"
         )
@@ -333,5 +353,5 @@ if __name__ == "__main__":
                 train_ids + dev_ids, [x for x in train_probs] + [x for x in dev_probs]
             ):
                 f.write(test_id + "\t" + "\t".join([str(x) for x in prob]) + "\n")
-    
+
     stats_file.close()
