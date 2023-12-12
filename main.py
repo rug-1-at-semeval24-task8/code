@@ -28,7 +28,12 @@ experiment = Experiment(
 
 
 def get_data(
-    train_path, test_path, random_seed, data_split_strategy, data_split_strategy_reverse
+    train_path,
+    test_path,
+    random_seed,
+    data_split_strategy,
+    add_human_to_val,
+    downsample_to_test_size,
 ):
     """
     function to read dataframe with columns
@@ -37,7 +42,7 @@ def get_data(
     train_df = pd.read_json(train_path, lines=True)
     test_df = pd.read_json(test_path, lines=True)
 
-    if data_split_strategy == "train_test_split":
+    if len(data_split_strategy) == 0:
         train_df, val_df = train_test_split(
             train_df,
             test_size=0.2,
@@ -45,79 +50,35 @@ def get_data(
             random_state=random_seed,
         )
     else:
-        human = train_df[train_df["model"] == "human"]
-        human, human_rest = train_test_split(
-            human,
-            test_size=0.5,
-            random_state=random_seed,
-        )
+        model_type = data_split_strategy[0]
+        val_df = train_df[train_df["model"] == model_type]
+        train_df = train_df[train_df["model"] != model_type]
+        for model_type in data_split_strategy[1:]:
+            add_val_df = train_df[train_df["model"] == model_type]
+            train_df = train_df[train_df["model"] != model_type]
+            val_df = pd.concat([val_df, add_val_df])
 
-        if data_split_strategy == "human_chatgpt_split":
-            chatgpt = train_df[train_df["model"] == "chatGPT"]
-            rest = train_df[
-                (train_df["model"] != "chatGPT") & (train_df["model"] != "human")
-            ]
+        if add_human_to_val:
+            # Add human data equivalent to the val_df size to the val_df
+            train_df = train_df[train_df["model"] != "human"]
+            human_df = train_df[train_df["model"] == "human"]
+            human_df, rest = human_df.iloc[: len(val_df)], human_df.iloc[len(val_df) :]
+            val_df = pd.concat([val_df, human_df])
+            train_df = pd.concat([train_df, rest])
 
-            # extend chatgpt data with human data
-            val_df = pd.concat([chatgpt, human])
-
-            # extend rest data with human data
-            train_df = pd.concat([rest, human_rest])
-
-        if data_split_strategy == "human_cohere_split":
-            cohere = train_df[train_df["model"] == "cohere"]
-            rest = train_df[
-                (train_df["model"] != "human") & (train_df["model"] != "cohere")
-            ]
-
-            # extend chatgpt data with human data
-            val_df = pd.concat([cohere, human])
-
-            # extend rest data with human data
-            train_df = pd.concat([rest, human_rest]).sample(frac=1).reset_index(drop=True)
-
-        if data_split_strategy == "human_davinci_split":
-            davinci = train_df[train_df["model"] == "davinci"]
-            rest = train_df[
-                (train_df["model"] != "human") & (train_df["model"] != "davinci")
-            ]
-
-            # extend chatgpt data with human data
-            val_df = pd.concat([davinci, human])
-
-            # extend rest data with human data
-            train_df = pd.concat([rest, human_rest])
-
-        if data_split_strategy == "human_bloomz_split":
-            bloomz = train_df[train_df["model"] == "bloomz"]
-            rest = train_df[
-                (train_df["model"] != "human") & (train_df["model"] != "bloomz")
-            ]
-
-            # extend chatgpt data with human data
-            val_df = pd.concat([bloomz, human])
-
-            # extend rest data with human data
-            train_df = pd.concat([rest, human_rest])
-
-        if data_split_strategy == "human_dooly_split":
-            dooly = train_df[train_df["model"] == "dooly"]
-            rest = train_df[
-                (train_df["model"] != "dooly") & (train_df["model"] != "human")
-            ]
-
-            # extend chatgpt data with human data
-            val_df = pd.concat([dooly, human])
-
-            # extend rest data with human data
-            train_df = pd.concat([rest, human_rest])
+        if downsample_to_test_size:
+            # 2500 human 2500 human data should be in val data
+            val_human_df = val_df[val_df["model"] == "human"]
+            val_model_df = val_df[val_df["model"] != "human"]
+            val_human_df, rest = val_human_df.iloc[:2500], val_human_df.iloc[2500:]
+            val_model_df, rest = val_model_df.iloc[:2500], val_model_df.iloc[2500:]
+            val_df = pd.concat([val_human_df, val_model_df])
 
         # shuffle data
-        train_df = train_df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        train_df = train_df.sample(frac=1, random_state=random_seed).reset_index(
+            drop=True
+        )
         val_df = val_df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
-        
-    if data_split_strategy_reverse:
-        val_df, test_df = test_df, val_df
 
     experiment.log_table(
         "train_value_counts.csv", train_df["model"].value_counts().to_frame()
@@ -202,22 +163,23 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_split_strategy",
         "-dss",
-        default="train_test_split",
-        choices=[
-            "train_test_split",
-            "human_chatgpt_split",
-            "human_cohere_split",
-            "human_davinci_split",
-            "human_bloomz_split",
-            "human_dooly_split",
-        ],
+        default=[],
+        help="Data split strategy",
+        nargs="+",
     )
     parser.add_argument(
-        "--data_split_strategy_reverse",
-        "-dssr",
+        "--add_human_to_val",
+        "-ahv",
         default=False,
-        help="Reverse the dev data with test data",
+        help="Add human to validation set",
         action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--downsample_to_test_size",
+        "-dts",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Downsample to test size to make it more comparable with test data",
     )
     args = parser.parse_args()
 
@@ -288,7 +250,8 @@ if __name__ == "__main__":
         test_path,
         random_seed,
         args.data_split_strategy,
-        args.data_split_strategy_reverse,
+        args.add_human_to_val,
+        args.downsample_to_test_size
     )
 
     # for testing purposes
