@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from transformers import set_seed
 
 from bilstm import BiLSTM
+from dataset import TensorTextDataset
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
 from training import eval_loop, train_loop
@@ -118,7 +119,7 @@ if __name__ == "__main__":
         choices=["A", "B"],
     )
     parser.add_argument(
-        "--model", "-m", required=True, help="Transformer to train and test", type=str
+        "--model", "-m", required=False, help="Transformer to train and test", type=str
     )
     parser.add_argument(
         "--prediction_file_path",
@@ -136,7 +137,7 @@ if __name__ == "__main__":
         "--batch_size_feature_extraction",
         "-bsfe",
         help="Batch size",
-        default=128,
+        default=32,
         type=int,
     )
     parser.add_argument("--epochs", "-e", help="Epochs", default=20, type=int)
@@ -251,7 +252,7 @@ if __name__ == "__main__":
         random_seed,
         args.data_split_strategy,
         args.add_human_to_val,
-        args.downsample_to_test_size
+        args.downsample_to_test_size,
     )
 
     # for testing purposes
@@ -316,17 +317,32 @@ if __name__ == "__main__":
         test_Y = np.array(test_df["label"].tolist())
 
     print("Building a model...")
-    train_dataset = TensorDataset(
+    # train_dataset = TensorDataset(
+    #     torch.tensor(train_X).float(),
+    #     torch.tensor(np.array(train_Y)).long(),
+    # )
+    # dev_dataset = TensorDataset(
+    #     torch.tensor(dev_X).float(),
+    #     torch.tensor(np.array(dev_Y)).long(),
+    # )
+    # test_dataset = TensorDataset(
+    #     torch.tensor(test_X).float(),
+    #     # torch.tensor(np.zeros(len(test_documents))).long(),
+    #     torch.tensor(np.array(test_Y)).long(),
+    # )
+    train_dataset = TensorTextDataset(
         torch.tensor(train_X).float(),
+        train_documents,
         torch.tensor(np.array(train_Y)).long(),
     )
-    dev_dataset = TensorDataset(
+    dev_dataset = TensorTextDataset(
         torch.tensor(dev_X).float(),
+        valid_documents,
         torch.tensor(np.array(dev_Y)).long(),
     )
-    test_dataset = TensorDataset(
+    test_dataset = TensorTextDataset(
         torch.tensor(test_X).float(),
-        # torch.tensor(np.zeros(len(test_documents))).long(),
+        test_documents,
         torch.tensor(np.array(test_Y)).long(),
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)

@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--train_file_path",
+                "../SemEval2024-task8/data/SubtaskA/subtaskA_train_multilingual.jsonl",
+                "--test_file_path",
+                "../SemEval2024-task8/data/SubtaskA/subtaskA_dev_multilingual.jsonl",
+                "--prediction_file_path",
+                "task_a_multi_out",
+                "--subtask",
+                "A",
+                "--tags",
+                "task_a_multi",
+                "--data_size",
+                "100"
+            ]
+        }
+    ]
+}

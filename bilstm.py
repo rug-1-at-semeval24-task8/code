@@ -12,7 +12,7 @@ class BiLSTM(Module):
         self.loss_fn = NLLLoss()
         self.local_device = local_device
     
-    def forward(self, x):
+    def forward(self, x, raw_text):
         _, (hidden_state, _) = self.lstm_layer(x)
         transposed = torch.transpose(hidden_state, 0, 1)
         reshaped = torch.reshape(transposed, (transposed.shape[0], -1))

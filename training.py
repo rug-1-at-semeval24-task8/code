@@ -14,7 +14,8 @@ def train_loop(
     preds = []
     true_Y = []
     for XY in dataloader:
-        XY = [xy.to(device) for xy in XY]
+        raw_test = XY["Text"]
+        XY = [XY["Tensor"].to(device), XY["Label"].to(device)]
         Xs = XY[:-1]
         Y = XY[-1]
         raw_pred = model(*Xs)
@@ -49,11 +50,12 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     losses = []
     with torch.no_grad():
         for XY in dataloader:
-            XY = [xy.to(device) for xy in XY]
+            raw_test = XY["Text"]
+            XY = [XY["Tensor"].to(device), XY["Label"].to(device)]
             Xs = XY[:-1]
             expected = XY[-1].detach().clone()
             Y = XY[-1].to(local_device)
-            output = model(*Xs)
+            output = model(*Xs, raw_test)
             pred = model.postprocessing(output, argmax=True)
             preds.append(pred)
             prob = np.exp(model.postprocessing(output, argmax=False))
