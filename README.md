@@ -1,9 +1,14 @@
-# code
+# How-to
 
-python main.py --train_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_train_monolingual.jsonl --test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_monolingual.jsonl --prediction_file_path out --subtask A --model A
+* Python version **3.9.6**.
 
-python main.py --train_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_train_multilingual.jsonl --test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_multilingual.jsonl --prediction_file_path out --subtask A --model A
+* Install requirements:
+```sh
+pip install -r requirements.txt
+```
 
+* Example run:
 
-
-python main.py --train_file_path ../SemEval2024-task8/data/SubtaskB/subtaskA_train_multilingual.jsonl --test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_multilingual.jsonl --prediction_file_path out --subtask A --model A
+```sh
+python --train_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_train_multilingual.jsonl --test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_multilingual.jsonl --prediction_file_pat task_a_multi_out --subtask A --tags task_a_multi -data_size 100
+```
