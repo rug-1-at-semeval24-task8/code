@@ -3,6 +3,7 @@ from stanza.pipeline.multilingual import MultilingualPipeline
 import torch
 import numpy as np
 from sklearn.feature_extraction import CountVectorizer
+from features.utils import timeit
 
 langs = ['ar','ru','zh-hans','id','ur','bg','de','en']
 lang_configs = {lang: {"processors": "tokenize"} for lang in langs}
@@ -15,6 +16,7 @@ class InformationRedundancyFeatures(FeatureGenerator):
         self.nlp = MultilingualPipeline(lang_id_config={"langid_lang_subset": langs}, lang_configs=lang_configs)
         self.trunc_frac = 0.25
 
+    @timeit
     def features(self, documents):
         results = np.zeros((len(documents), 6)) 
         for i_doc, doc in enumerate(documents):

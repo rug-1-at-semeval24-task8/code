@@ -2,8 +2,10 @@ import numpy as np
 import torch
 from sklearn.metrics import f1_score
 from tqdm.auto import tqdm
+from features.utils import timeit
 
 
+@timeit
 def train_loop(
     dataloader, model, optimizer, scheduler, device, local_device, skip_visual=False
 ):
@@ -14,11 +16,11 @@ def train_loop(
     preds = []
     true_Y = []
     for XY in dataloader:
-        raw_test = XY["Text"]
+        doc_feats = XY["DocFeats"]
         XY = [XY["Tensor"].to(device), XY["Label"].to(device)]
         Xs = XY[:-1]
         Y = XY[-1]
-        raw_pred = model(*Xs)
+        raw_pred = model(*Xs, doc_feats)
         preds.append(model.postprocessing(raw_pred))
         true_Y.append(Y.to(local_device).numpy())
         loss = model.compute_loss(raw_pred, Y)
@@ -35,6 +37,7 @@ def train_loop(
     return np.mean(losses), f1
 
 
+@timeit
 def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=False):
     if test:
         print("Generating predictions...")
@@ -50,12 +53,12 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     losses = []
     with torch.no_grad():
         for XY in dataloader:
-            raw_test = XY["Text"]
+            doc_feats = XY["DocFeats"]
             XY = [XY["Tensor"].to(device), XY["Label"].to(device)]
             Xs = XY[:-1]
             expected = XY[-1].detach().clone()
             Y = XY[-1].to(local_device)
-            output = model(*Xs, raw_test)
+            output = model(*Xs, doc_feats)
             pred = model.postprocessing(output, argmax=True)
             preds.append(pred)
             prob = np.exp(model.postprocessing(output, argmax=False))
@@ -73,8 +76,12 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     true_Y = np.concatenate(true_Y)
     if not test:
         print("Accuracy: " + str(correct / size))
-        f1_micro = f1_score(y_true=true_Y, y_pred=preds, average="micro", zero_division=1)
-        f1_macro = f1_score(y_true=true_Y, y_pred=preds, average="macro", zero_division=1)
+        f1_micro = f1_score(
+            y_true=true_Y, y_pred=preds, average="micro", zero_division=1
+        )
+        f1_macro = f1_score(
+            y_true=true_Y, y_pred=preds, average="macro", zero_division=1
+        )
         print("F1-micro score: " + str(f1_micro))
         print("F1-macro score: " + str(f1_macro))
         return f1_micro, f1_macro, np.mean(losses)

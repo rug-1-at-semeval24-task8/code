@@ -156,7 +156,7 @@ if __name__ == "__main__":
         "--enable_perplexity",
         "-epp",
         help="Enable perplexity feature",
-        default=False,
+        default=True,
         type=bool,
     )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
@@ -271,7 +271,7 @@ if __name__ == "__main__":
 
     #  Add your features instances
     featurizers = []
-
+    doc_level_featurizers = []
     if args.enable_preditability:
         pred_feature = PredictabilityFeature(
             device=device,
@@ -282,16 +282,17 @@ if __name__ == "__main__":
             experiment=experiment,
         )
         featurizers.append(pred_feature)
-    if args.enable_perplexity:
+    if args.enable_perplexity: # Example doc level feature
         pp_feature = PerplexityFeature(
             device=device,
             local_device=local_device,
             model_id="gpt2",
-            batch_size=args.batch_size_feature_extraction,
             fixed_length=args.fixed_length,
             experiment=experiment,
         )
-        featurizers.append(pp_feature)
+        doc_level_featurizers.append(pp_feature)
+    # NOTE: Add your doc level features here as we did for perplexity feature
+
 
     train_X = []
     dev_X = []
@@ -300,10 +301,23 @@ if __name__ == "__main__":
         train_X.append(np.array(fz.features(train_documents)))
         dev_X.append(np.array(fz.features(valid_documents)))
         test_X.append(np.array(fz.features(test_documents)))
+    
+    doc_train_X = []
+    doc_dev_X = []
+    doc_test_X = []
+    for fz in doc_level_featurizers:
+        doc_train_X.append(np.array(fz.features(train_documents)))
+        doc_dev_X.append(np.array(fz.features(valid_documents)))
+        doc_test_X.append(np.array(fz.features(test_documents)))
 
     train_X = np.concatenate(train_X, axis=2)
     dev_X = np.concatenate(dev_X, axis=2)
     test_X = np.concatenate(test_X, axis=2)
+
+    doc_train_X = np.concatenate(doc_train_X, axis=1)
+    doc_dev_X = np.concatenate(doc_dev_X, axis=1)
+    doc_test_X = np.concatenate(doc_test_X, axis=1)
+
 
     if subtask == "A":
         train_Y = np.array(train_df["label"].tolist())
@@ -332,24 +346,24 @@ if __name__ == "__main__":
     # )
     train_dataset = TensorTextDataset(
         torch.tensor(train_X).float(),
-        train_documents,
         torch.tensor(np.array(train_Y)).long(),
+        doc_train_X
     )
     dev_dataset = TensorTextDataset(
         torch.tensor(dev_X).float(),
-        valid_documents,
         torch.tensor(np.array(dev_Y)).long(),
+        doc_dev_X
     )
     test_dataset = TensorTextDataset(
         torch.tensor(test_X).float(),
-        test_documents,
         torch.tensor(np.array(test_Y)).long(),
+        doc_test_X
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
-    model = BiLSTM(train_X.shape[2], subtask, local_device)
+    model = BiLSTM(train_X.shape[2], doc_train_X.shape[1] ,subtask, local_device, device)
     language = "en"
 
     stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
