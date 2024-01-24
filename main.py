@@ -19,6 +19,8 @@ from bilstm import BiLSTM
 from dataset import TensorTextDataset
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
+from features.information_redundancy import InformationRedundancyFeature
+from features.entity_coherence import EntityCoherenceFeature
 from training import eval_loop, train_loop
 
 experiment = Experiment(
@@ -159,6 +161,20 @@ if __name__ == "__main__":
         default=True,
         type=bool,
     )
+    parser.add_argument(
+        "--enable_information_redundancy",
+        "-eir",
+        help="Enable information redundancy features",
+        default=True,
+        type=bool,
+    )
+    parser.add_argument(
+        "--enable_entity_coherence",
+        "-eec",
+        help="Enable entity coherence features (note: this should only be enabled for monolingual English data)",
+        default=True,
+        type=bool,
+    )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
     parser.add_argument("--tags", "-tg", help="Tags", nargs="+", default=[])
     parser.add_argument(
@@ -291,8 +307,19 @@ if __name__ == "__main__":
             experiment=experiment,
         )
         doc_level_featurizers.append(pp_feature)
+    if args.enable_information_redundancy:
+        info_red_feature = InformationRedundancyFeature(
+            device=device,
+            local_device=local_device
+        )
+        doc_level_featurizers.append(info_red_feature)
+    if args.enable_entity_coherence:
+        entity_coh_feature = EntityCoherenceFeature(
+            device=device,
+            local_device=local_device
+        )
+        doc_level_featurizers.append(entity_coh_feature)
     # NOTE: Add your doc level features here as we did for perplexity feature
-
 
     train_X = []
     dev_X = []

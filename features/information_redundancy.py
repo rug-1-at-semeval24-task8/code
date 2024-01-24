@@ -2,17 +2,16 @@ from features.base import FeatureGenerator
 from stanza.pipeline.multilingual import MultilingualPipeline
 import torch
 import numpy as np
-from sklearn.feature_extraction import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from features.utils import timeit
 
 langs = ['ar','ru','zh-hans','id','ur','bg','de','en']
 lang_configs = {lang: {"processors": "tokenize"} for lang in langs}
 
-class InformationRedundancyFeatures(FeatureGenerator):
-    def __init__(self, device, local_device, batch_size):
+class InformationRedundancyFeature(FeatureGenerator):
+    def __init__(self, device, local_device):
         self.device = device
         self.local_device = local_device
-        self.batch_size = batch_size
         self.nlp = MultilingualPipeline(lang_id_config={"langid_lang_subset": langs}, lang_configs=lang_configs)
         self.trunc_frac = 0.25
 
