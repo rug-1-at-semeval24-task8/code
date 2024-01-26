@@ -121,7 +121,12 @@ if __name__ == "__main__":
         choices=["A", "B"],
     )
     parser.add_argument(
-        "--model", "-m", required=False, help="Transformer to train and test", type=str
+        "--models",
+        "-m",
+        required=False,
+        help="Transformer to train and test",
+        default=["xlm-roberta-base"],
+        nargs="+",
     )
     parser.add_argument(
         "--prediction_file_path",
@@ -165,14 +170,14 @@ if __name__ == "__main__":
         "--enable_information_redundancy",
         "-eir",
         help="Enable information redundancy features",
-        default=True,
+        default=False,
         type=bool,
     )
     parser.add_argument(
         "--enable_entity_coherence",
         "-eec",
         help="Enable entity coherence features (note: this should only be enabled for monolingual English data)",
-        default=True,
+        default=False,
         type=bool,
     )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
@@ -198,6 +203,22 @@ if __name__ == "__main__":
         action=argparse.BooleanOptionalAction,
         help="Downsample to test size to make it more comparable with test data",
     )
+    parser.add_argument(
+        "--hidden_size", "-hs", default=64, type=int, help="Hidden size"
+    )
+    parser.add_argument(
+        "--num_lstm_layers", "-nl", default=2, type=int, help="Number of LSTM layers"
+    )
+    parser.add_argument(
+        "--dropout_prop", "-dp", default=0.0, type=float, help="Dropout proportion"
+    )
+    parser.add_argument(
+        "--attention_enabled",
+        "-ae",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Attention enabled",
+    )
     args = parser.parse_args()
 
     device = (
@@ -208,12 +229,16 @@ if __name__ == "__main__":
     random_seed = args.seed
     train_path = args.train_file_path  # For example 'subtaskA_train_multilingual.jsonl'
     test_path = args.test_file_path  # For example 'subtaskA_test_multilingual.jsonl'
-    model = args.model  # For example 'xlm-roberta-base'
+    models = args.models  # For example 'xlm-roberta-base'
     subtask = args.subtask  # For example 'A'
     prediction_path = (
         args.prediction_file_path
     )  # For example subtaskB_predictions.jsonl
     batch_size = args.batch_size
+    hidden_size = args.hidden_size
+    num_lstm_layers = args.num_lstm_layers
+    dropout_prop = args.dropout_prop
+    attention_enabled = args.attention_enabled
 
     # LOG PARAMETERS
     experiment.log_parameters(vars(args))
@@ -292,19 +317,19 @@ if __name__ == "__main__":
         pred_feature = PredictabilityFeature(
             device=device,
             local_device=local_device,
-            language="en",
             batch_size=args.batch_size_feature_extraction,
             fixed_length=args.fixed_length,
             experiment=experiment,
+            models=models#, "distilgpt2", "gpt2-large", "gpt2-xl"],
         )
         featurizers.append(pred_feature)
-    if args.enable_perplexity: # Example doc level feature
+    if args.enable_perplexity:  # Example doc level feature
         pp_feature = PerplexityFeature(
             device=device,
             local_device=local_device,
-            model_id="gpt2",
             fixed_length=args.fixed_length,
             experiment=experiment,
+            models=models#, "distilgpt2", "gpt2-large", "gpt2-xl"],
         )
         doc_level_featurizers.append(pp_feature)
     if args.enable_information_redundancy:
@@ -328,7 +353,7 @@ if __name__ == "__main__":
         train_X.append(np.array(fz.features(train_documents)))
         dev_X.append(np.array(fz.features(valid_documents)))
         test_X.append(np.array(fz.features(test_documents)))
-    
+
     doc_train_X = []
     doc_dev_X = []
     doc_test_X = []
@@ -344,7 +369,6 @@ if __name__ == "__main__":
     doc_train_X = np.concatenate(doc_train_X, axis=1)
     doc_dev_X = np.concatenate(doc_dev_X, axis=1)
     doc_test_X = np.concatenate(doc_test_X, axis=1)
-
 
     if subtask == "A":
         train_Y = np.array(train_df["label"].tolist())
@@ -374,23 +398,29 @@ if __name__ == "__main__":
     train_dataset = TensorTextDataset(
         torch.tensor(train_X).float(),
         torch.tensor(np.array(train_Y)).long(),
-        doc_train_X
+        doc_train_X,
     )
     dev_dataset = TensorTextDataset(
-        torch.tensor(dev_X).float(),
-        torch.tensor(np.array(dev_Y)).long(),
-        doc_dev_X
+        torch.tensor(dev_X).float(), torch.tensor(np.array(dev_Y)).long(), doc_dev_X
     )
     test_dataset = TensorTextDataset(
-        torch.tensor(test_X).float(),
-        torch.tensor(np.array(test_Y)).long(),
-        doc_test_X
+        torch.tensor(test_X).float(), torch.tensor(np.array(test_Y)).long(), doc_test_X
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, shuffle=False, batch_size=batch_size)
 
-    model = BiLSTM(train_X.shape[2], doc_train_X.shape[1] ,subtask, local_device, device)
+    model = BiLSTM(
+        train_X.shape[2],
+        doc_train_X.shape[1],
+        subtask,
+        local_device,
+        device,
+        hidden_size,
+        num_lstm_layers,
+        dropout_prop,
+        attention_enabled,
+    )
     language = "en"
 
     stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
