@@ -12,15 +12,13 @@ from comet_ml import Experiment
 from sklearn.model_selection import train_test_split
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from transformers import set_seed
 
 from bilstm import BiLSTM
 from dataset import TensorTextDataset
 from features.perplexity import PerplexityFeature
 from features.predictability import PredictabilityFeature
-from features.information_redundancy import InformationRedundancyFeature
-from features.entity_coherence import EntityCoherenceFeature
 from training import eval_loop, train_loop
 
 experiment = Experiment(
@@ -156,29 +154,25 @@ if __name__ == "__main__":
         "--enable_preditability",
         "-ep",
         help="Enable predictability feature",
-        default=True,
-        type=bool,
+        action=argparse.BooleanOptionalAction
     )
     parser.add_argument(
         "--enable_perplexity",
         "-epp",
         help="Enable perplexity feature",
-        default=True,
-        type=bool,
+        action=argparse.BooleanOptionalAction
     )
     parser.add_argument(
         "--enable_information_redundancy",
         "-eir",
         help="Enable information redundancy features",
-        default=False,
-        type=bool,
+        action=argparse.BooleanOptionalAction
     )
     parser.add_argument(
         "--enable_entity_coherence",
         "-eec",
         help="Enable entity coherence features (note: this should only be enabled for monolingual English data)",
-        default=False,
-        type=bool,
+        action=argparse.BooleanOptionalAction
     )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
     parser.add_argument("--tags", "-tg", help="Tags", nargs="+", default=[])
@@ -333,12 +327,14 @@ if __name__ == "__main__":
         )
         doc_level_featurizers.append(pp_feature)
     if args.enable_information_redundancy:
+        from features.information_redundancy import InformationRedundancyFeature
         info_red_feature = InformationRedundancyFeature(
             device=device,
             local_device=local_device
         )
         doc_level_featurizers.append(info_red_feature)
     if args.enable_entity_coherence:
+        from features.entity_coherence import EntityCoherenceFeature
         entity_coh_feature = EntityCoherenceFeature(
             device=device,
             local_device=local_device

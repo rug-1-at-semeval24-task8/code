@@ -1,0 +1,130 @@
+COMET INFO: Experiment is live on comet.com https://www.comet.com/halecakir/shared-task/959207ad59e642abb9b97236fe70c5e9
+
+2024-01-27 16:09:07 INFO: Checking for updates to resources.json in case models have been updated.  Note: this behavior can be turned off with download_method=None or download_method=DownloadMethod.REUSE_RESOURCES
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json:   0%|          | 0.00/46.2k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json: 370kB [00:00, 71.0MB/s]                    
+2024-01-27 16:09:07 INFO: Loading these models for language: multilingual ():
+=======================
+| Processor | Package |
+-----------------------
+| langid    | ud      |
+=======================
+
+2024-01-27 16:09:07 INFO: Using device: cuda
+2024-01-27 16:09:07 INFO: Loading: langid
+2024-01-27 16:09:09 INFO: Done loading processors!
+2024-01-27 16:09:09 INFO: Checking for updates to resources.json in case models have been updated.  Note: this behavior can be turned off with download_method=None or download_method=DownloadMethod.REUSE_RESOURCES
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json:   0%|          | 0.00/46.2k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json: 370kB [00:00, 99.4MB/s]                    
+2024-01-27 16:09:10 INFO: Loading these models for language: en (English):
+=======================================
+| Processor | Package                 |
+---------------------------------------
+| tokenize  | combined                |
+| mwt       | combined                |
+| pos       | combined_charlm         |
+| lemma     | combined_nocharlm       |
+| coref     | ontonotes_electra-large |
+| depparse  | combined_charlm         |
+=======================================
+
+2024-01-27 16:09:10 INFO: Using device: cuda
+2024-01-27 16:09:10 INFO: Loading: tokenize
+2024-01-27 16:09:10 INFO: Loading: mwt
+2024-01-27 16:09:10 INFO: Loading: pos
+2024-01-27 16:09:10 INFO: Loading: lemma
+2024-01-27 16:09:10 INFO: Loading: coref
+comet_ml is installed but `COMET_API_KEY` is not set.
+2024-01-27 16:09:19 INFO: Loading: depparse
+2024-01-27 16:09:19 INFO: Done loading processors!
+If you want to use `XLMRobertaLMHeadModel` as a standalone, add `is_decoder=True.`
+  0%|          | 0/100 [00:00<?, ?it/s]  8%|8         | 8/100 [00:00<00:01, 71.53it/s] 17%|#7        | 17/100 [00:00<00:01, 80.12it/s] 26%|##6       | 26/100 [00:00<00:01, 72.86it/s] 34%|###4      | 34/100 [00:00<00:00, 68.20it/s] 41%|####1     | 41/100 [00:00<00:00, 66.45it/s] 48%|####8     | 48/100 [00:00<00:00, 61.73it/s] 55%|#####5    | 55/100 [00:00<00:00, 59.81it/s] 62%|######2   | 62/100 [00:00<00:00, 60.07it/s] 69%|######9   | 69/100 [00:01<00:00, 60.99it/s] 76%|#######6  | 76/100 [00:01<00:00, 61.04it/s] 83%|########2 | 83/100 [00:01<00:00, 63.37it/s] 90%|######### | 90/100 [00:01<00:00, 64.35it/s] 97%|#########7| 97/100 [00:01<00:00, 57.02it/s]100%|##########| 100/100 [00:01<00:00, 54.89it/s]
+If you want to use `XLMRobertaLMHeadModel` as a standalone, add `is_decoder=True.`
+  0%|          | 0/100 [00:00<?, ?it/s]  7%|7         | 7/100 [00:00<00:01, 68.89it/s] 14%|#4        | 14/100 [00:00<00:01, 63.57it/s] 21%|##1       | 21/100 [00:00<00:01, 61.05it/s] 28%|##8       | 28/100 [00:00<00:01, 64.11it/s] 37%|###7      | 37/100 [00:00<00:00, 69.35it/s] 45%|####5     | 45/100 [00:00<00:00, 69.87it/s] 52%|#####2    | 52/100 [00:00<00:00, 69.54it/s] 59%|#####8    | 59/100 [00:00<00:00, 64.53it/s] 66%|######6   | 66/100 [00:01<00:00, 65.05it/s] 73%|#######3  | 73/100 [00:01<00:00, 62.59it/s] 80%|########  | 80/100 [00:01<00:00, 61.69it/s] 87%|########7 | 87/100 [00:01<00:00, 62.95it/s] 94%|#########3| 94/100 [00:01<00:00, 62.99it/s]100%|##########| 100/100 [00:01<00:00, 56.06it/s]
+If you want to use `XLMRobertaLMHeadModel` as a standalone, add `is_decoder=True.`
+  0%|          | 0/100 [00:00<?, ?it/s]  7%|7         | 7/100 [00:00<00:01, 66.48it/s] 15%|#5        | 15/100 [00:00<00:01, 66.53it/s] 22%|##2       | 22/100 [00:00<00:01, 63.95it/s] 30%|###       | 30/100 [00:00<00:01, 67.14it/s] 37%|###7      | 37/100 [00:00<00:00, 68.07it/s] 45%|####5     | 45/100 [00:00<00:00, 69.16it/s] 52%|#####2    | 52/100 [00:00<00:00, 68.13it/s] 60%|######    | 60/100 [00:00<00:00, 69.00it/s] 68%|######8   | 68/100 [00:00<00:00, 69.57it/s] 76%|#######6  | 76/100 [00:01<00:00, 69.60it/s] 84%|########4 | 84/100 [00:01<00:00, 69.92it/s] 92%|#########2| 92/100 [00:01<00:00, 70.04it/s]100%|##########| 100/100 [00:01<00:00, 70.34it/s]100%|##########| 100/100 [00:01<00:00, 59.66it/s]
+2024-01-27 16:09:39 INFO: Checking for updates to resources.json in case models have been updated.  Note: this behavior can be turned off with download_method=None or download_method=DownloadMethod.REUSE_RESOURCES
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json:   0%|          | 0.00/46.2k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json: 370kB [00:00, 60.0MB/s]                    
+2024-01-27 16:09:39 WARNING: Language en package default expects mwt, which has been added
+2024-01-27 16:09:39 INFO: Loading these models for language: en (English):
+========================
+| Processor | Package  |
+------------------------
+| tokenize  | combined |
+| mwt       | combined |
+========================
+
+2024-01-27 16:09:39 INFO: Using device: cuda
+2024-01-27 16:09:39 INFO: Loading: tokenize
+2024-01-27 16:09:39 INFO: Loading: mwt
+2024-01-27 16:09:39 INFO: Done loading processors!
+2024-01-27 16:10:06 INFO: Checking for updates to resources.json in case models have been updated.  Note: this behavior can be turned off with download_method=None or download_method=DownloadMethod.REUSE_RESOURCES
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json:   0%|          | 0.00/46.2k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json: 370kB [00:00, 95.0MB/s]                    
+2024-01-27 16:10:06 INFO: Loading these models for language: ru (Russian):
+=========================
+| Processor | Package   |
+-------------------------
+| tokenize  | syntagrus |
+=========================
+
+2024-01-27 16:10:06 INFO: Using device: cuda
+2024-01-27 16:10:06 INFO: Loading: tokenize
+2024-01-27 16:10:06 INFO: Done loading processors!
+2024-01-27 16:10:06 INFO: Checking for updates to resources.json in case models have been updated.  Note: this behavior can be turned off with download_method=None or download_method=DownloadMethod.REUSE_RESOURCES
+Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json:   0%|          | 0.00/46.2k [00:00<?, ?B/s]Downloading https://raw.githubusercontent.com/stanfordnlp/stanza-resources/main/resources_1.7.0.json: 370kB [00:00, 80.9MB/s]                    
+2024-01-27 16:10:06 INFO: Loading these models for language: bg (Bulgarian):
+=======================
+| Processor | Package |
+-----------------------
+| tokenize  | btb     |
+=======================
+
+2024-01-27 16:10:06 INFO: Using device: cuda
+2024-01-27 16:10:06 INFO: Loading: tokenize
+2024-01-27 16:10:06 INFO: Done loading processors!
+Traceback (most recent call last):
+  File "/home1/s5751152/code/main.py", line 361, in <module>
+    doc_train_X.append(np.array(fz.features(train_documents)))
+  File "/home1/s5751152/code/features/utils.py", line 9, in timeit_wrapper
+    result = func(*args, **kwargs)
+  File "/home1/s5751152/code/features/entity_coherence.py", line 48, in features
+    processed = self.nlp(doc)
+  File "/home1/s5751152/venvs/semeval/lib/python3.9/site-packages/stanza/pipeline/core.py", line 476, in __call__
+    return self.process(doc, processors)
+  File "/home1/s5751152/venvs/semeval/lib/python3.9/site-packages/stanza/pipeline/core.py", line 427, in process
+    doc = process(doc)
+  File "/home1/s5751152/venvs/semeval/lib/python3.9/site-packages/stanza/pipeline/coref_processor.py", line 120, in process
+    raise ValueError("The coref model predicted a span that crossed two sentences!  Please send this example to us on our github")
+ValueError: The coref model predicted a span that crossed two sentences!  Please send this example to us on our github
+COMET INFO: ---------------------------------------------------------------------------------------
+COMET INFO: Comet.ml Experiment Summary
+COMET INFO: ---------------------------------------------------------------------------------------
+COMET INFO:   Data:
+COMET INFO:     display_summary_level : 1
+COMET INFO:     url                   : https://www.comet.com/halecakir/shared-task/959207ad59e642abb9b97236fe70c5e9
+COMET INFO:   Parameters:
+COMET INFO:     add_human_to_val              : False
+COMET INFO:     attention_enabled             : False
+COMET INFO:     batch_size                    : 16
+COMET INFO:     batch_size_feature_extraction : 32
+COMET INFO:     data_split_strategy           : []
+COMET INFO:     downsample_to_test_size       : False
+COMET INFO:     dropout_prop                  : 0.0
+COMET INFO:     enable_entity_coherence       : True
+COMET INFO:     enable_information_redundancy : True
+COMET INFO:     enable_perplexity             : True
+COMET INFO:     enable_preditability          : False
+COMET INFO:     epochs                        : 20
+COMET INFO:     feat_perplexity               : True
+COMET INFO:     fixed_length                  : 128
+COMET INFO:     hidden_size                   : 64
+COMET INFO:     models                        : ['xlm-roberta-base']
+COMET INFO:     num_lstm_layers               : 2
+COMET INFO:     seed                          : 10
+COMET INFO:   Uploads:
+COMET INFO:     dataframe                : 6 (6.40 KB)
+COMET INFO:     environment details      : 1
+COMET INFO:     filename                 : 1
+COMET INFO:     git metadata             : 1
+COMET INFO:     git-patch (uncompressed) : 1 (2.23 KB)
+COMET INFO:     installed packages       : 1
+COMET INFO:     source_code              : 1 (17.63 KB)
+COMET INFO: 

@@ -65,6 +65,8 @@ class EntityCoherenceFeature(FeatureGenerator):
             role_seq_by_sentence = ["".join([role_map.get(s, "X") for s in c]) for c in roles_by_sentence]
             mat = self.vect.transform(role_seq_by_sentence)
             dist = mat.sum(axis=0) / mat.sum()
-            results[i_doc] = dist.toarray()
+            #results[i_doc] = dist.toarray() # @alon. is this the right way to get the array? I got "AttributeError: 'matrix' object has no attribute 'toarray'"
+            results[i_doc] = dist
         return results
+    
 
