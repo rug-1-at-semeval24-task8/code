@@ -68,8 +68,9 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
             eq = np.equal(Y, pred)
             size += len(eq)
             correct += sum(eq)
-            loss = model.compute_loss(output, expected)
-            losses.append(loss.detach().to(local_device).numpy())
+            if not test:
+                loss = model.compute_loss(output, expected)
+                losses.append(loss.detach().to(local_device).numpy())
             progress_bar.update(1)
     preds = np.concatenate(preds)
     probs = np.concatenate(probs)

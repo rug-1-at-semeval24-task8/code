@@ -47,20 +47,6 @@ def get_data(
         random_state=random_seed,
     )
 
-    experiment.log_table(
-        "train_value_counts.csv", train_df["model"].value_counts().to_frame()
-    )
-    experiment.log_table(
-        "val_value_counts.csv", val_df["model"].value_counts().to_frame()
-    )
-    experiment.log_table(
-        "test_value_counts.csv", test_df["model"].value_counts().to_frame()
-    )
-
-    experiment.log_table("train_meta.csv", train_df.describe(include="all"))
-    experiment.log_table("val_meta.csv", val_df.describe(include="all"))
-    experiment.log_table("test_meta.csv", test_df.describe(include="all"))
-
     return train_df, val_df, test_df
 
 
@@ -249,7 +235,7 @@ if __name__ == "__main__":
         train_df = train_df.head(args.data_size)
         valid_df = valid_df.head(args.data_size)
     
-    test_df = test_df.head(args.data_size)
+
 
     train_documents = train_df["text"].tolist()
     valid_documents = valid_df["text"].tolist()
@@ -325,12 +311,12 @@ if __name__ == "__main__":
         train_Y = np.array(train_df["label"].tolist())
         dev_Y = np.array(valid_df["label"].tolist())
         # Remove it later:
-        test_Y = np.array(test_df["label"].tolist())
+        
     elif subtask == "B":
         train_Y = np.array(train_df["label"].tolist())
         dev_Y = np.array(valid_df["label"].tolist())
         # Remove it later:
-        test_Y = np.array(test_df["label"].tolist())
+        
 
     print("Building a model...")
 
@@ -343,7 +329,7 @@ if __name__ == "__main__":
         torch.tensor(dev_X).float(), torch.tensor(np.array(dev_Y)).long(), doc_dev_X
     )
     test_dataset = TensorTextDataset(
-        torch.tensor(test_X).float(), torch.tensor(np.array(test_Y)).long(), doc_test_X
+        torch.tensor(test_X).float(), torch.tensor(np.array(list(range(test_X.shape[0])))).long(), doc_test_X
     )
     train_loader = DataLoader(train_dataset, shuffle=False, batch_size=batch_size)
     dev_loader = DataLoader(dev_dataset, shuffle=False, batch_size=batch_size)
@@ -384,7 +370,7 @@ if __name__ == "__main__":
 
         print("Development set evaluation")
         dev_f1_micro, dev_f1_macro, dev_loss = eval_loop(
-            dev_loader, model, device, local_device, skip_visual, test=False
+            dev_loader, model, device, local_device, skip_visual
         )
 
         experiment.log_metric("dev_f1_macro", dev_f1_macro)
@@ -392,15 +378,6 @@ if __name__ == "__main__":
         experiment.log_metric("dev_loss", dev_loss)
 
     print("Test set evaluation")        
-    test_f1_micro, test_f1_macro, test_loss = eval_loop(
-        test_loader, model, device, local_device, skip_visual, test=False
-    )
-
-    experiment.log_metric("test_f1_macro", test_f1_macro)
-    experiment.log_metric("test_f1_micro", test_f1_micro)
-    experiment.log_metric("test_loss", test_loss)
-
-    
     preds, probs = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
     predictions_df = pd.DataFrame({'id': test_df['id'], 'label': preds})
     predictions_df.to_json(out_path, lines=True, orient='records')
