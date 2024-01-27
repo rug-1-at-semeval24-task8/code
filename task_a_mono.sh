@@ -14,7 +14,7 @@ export 'PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512'
 
 python3.9 main.py --train_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_train_monolingual.jsonl \
 	--test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_monolingual.jsonl \
-	--prediction_file_path out/task_a_mono_out --subtask A --tags task_a_mono $* 
+	--prediction_file_path out/task_a_mono_out --subtask A --tags task_a_mono --mono $* 
 
 
 

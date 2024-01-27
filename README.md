@@ -78,8 +78,20 @@ optional arguments:
   --attention_enabled, --no-attention_enabled, -ae
                         Attention enabled (default: False)
 ```
-* Example run:
+* Training (example):
 
 ```sh
 python main.py --train_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_train_multilingual.jsonl --test_file_path ../SemEval2024-task8/data/SubtaskA/subtaskA_dev_multilingual.jsonl --prediction_file_pat task_a_multi_out --subtask A --tags task_a_multi --data_size 100 -ep -epp
+```
+
+* Format checker:
+
+```sh
+python format_checker.py -p test_pred.csv
+```
+
+*  Scorer:
+
+```sh
+Add Command here.
 ```

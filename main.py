@@ -84,6 +84,7 @@ if __name__ == "__main__":
         type=str,
         choices=["A", "B"],
     )
+    parser.add_argument("--mono", "-mono", help="Monolingual", action="store_true")
     parser.add_argument(
         "--models",
         "-m",
@@ -221,10 +222,21 @@ if __name__ == "__main__":
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
 
-    out_path = pathlib.Path(".") / prediction_path
 
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
+    if subtask == "A":
+        experiment.add_tag("subtask_a")
+        if args.mono:
+            experiment.add_tag("monolingual")
+            out_path = "subtask_a_monolingual.jsonl"
+        else:
+            experiment.add_tag("monolingual")
+            out_path = "subtask_a_multilingual.jsonl"
+    elif subtask == "B":
+        experiment.add_tag("subtask_b")
+        out_path = "subtask_b.json"
+    elif subtask == "C":
+        experiment.add_tag("subtask_c")
+        out_path = "subtask_c.json"
 
     train_df, valid_df, test_df = get_data(
         train_path,
@@ -236,7 +248,8 @@ if __name__ == "__main__":
     if args.data_size > 0:
         train_df = train_df.head(args.data_size)
         valid_df = valid_df.head(args.data_size)
-        test_df = test_df.head(args.data_size)
+    
+    test_df = test_df.head(args.data_size)
 
     train_documents = train_df["text"].tolist()
     valid_documents = valid_df["text"].tolist()
@@ -378,11 +391,16 @@ if __name__ == "__main__":
         experiment.log_metric("dev_f1_micro", dev_f1_micro)
         experiment.log_metric("dev_loss", dev_loss)
 
-        print("Test set evaluation")
-        test_f1_micro, test_f1_macro, test_loss = eval_loop(
-            test_loader, model, device, local_device, skip_visual, test=False
-        )
+    print("Test set evaluation")        
+    test_f1_micro, test_f1_macro, test_loss = eval_loop(
+        test_loader, model, device, local_device, skip_visual, test=False
+    )
 
-        experiment.log_metric("test_f1_macro", test_f1_macro)
-        experiment.log_metric("test_f1_micro", test_f1_micro)
-        experiment.log_metric("test_loss", test_loss)
+    experiment.log_metric("test_f1_macro", test_f1_macro)
+    experiment.log_metric("test_f1_micro", test_f1_micro)
+    experiment.log_metric("test_loss", test_loss)
+
+    
+    preds, probs = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
+    predictions_df = pd.DataFrame({'id': test_df['id'], 'label': preds})
+    predictions_df.to_json(out_path, lines=True, orient='records')
