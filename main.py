@@ -31,10 +31,7 @@ experiment = Experiment(
 def get_data(
     train_path,
     test_path,
-    random_seed,
-    data_split_strategy,
-    add_human_to_val,
-    downsample_to_test_size,
+    random_seed
 ):
     """
     function to read dataframe with columns
@@ -43,43 +40,12 @@ def get_data(
     train_df = pd.read_json(train_path, lines=True)
     test_df = pd.read_json(test_path, lines=True)
 
-    if len(data_split_strategy) == 0:
-        train_df, val_df = train_test_split(
-            train_df,
-            test_size=0.2,
-            stratify=train_df["label"],
-            random_state=random_seed,
-        )
-    else:
-        model_type = data_split_strategy[0]
-        val_df = train_df[train_df["model"] == model_type]
-        train_df = train_df[train_df["model"] != model_type]
-        for model_type in data_split_strategy[1:]:
-            add_val_df = train_df[train_df["model"] == model_type]
-            train_df = train_df[train_df["model"] != model_type]
-            val_df = pd.concat([val_df, add_val_df])
-
-        if add_human_to_val:
-            # Add human data equivalent to the val_df size to the val_df
-            train_df = train_df[train_df["model"] != "human"]
-            human_df = train_df[train_df["model"] == "human"]
-            human_df, rest = human_df.iloc[: len(val_df)], human_df.iloc[len(val_df) :]
-            val_df = pd.concat([val_df, human_df])
-            train_df = pd.concat([train_df, rest])
-
-        if downsample_to_test_size:
-            # 2500 human 2500 human data should be in val data
-            val_human_df = val_df[val_df["model"] == "human"]
-            val_model_df = val_df[val_df["model"] != "human"]
-            val_human_df, rest = val_human_df.iloc[:2500], val_human_df.iloc[2500:]
-            val_model_df, rest = val_model_df.iloc[:2500], val_model_df.iloc[2500:]
-            val_df = pd.concat([val_human_df, val_model_df])
-
-        # shuffle data
-        train_df = train_df.sample(frac=1, random_state=random_seed).reset_index(
-            drop=True
-        )
-        val_df = val_df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+    train_df, val_df = train_test_split(
+        train_df,
+        test_size=0.2,
+        stratify=train_df["label"],
+        random_state=random_seed,
+    )
 
     experiment.log_table(
         "train_value_counts.csv", train_df["model"].value_counts().to_frame()
@@ -154,49 +120,28 @@ if __name__ == "__main__":
         "--enable_preditability",
         "-ep",
         help="Enable predictability feature",
-        action=argparse.BooleanOptionalAction
+        action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
         "--enable_perplexity",
         "-epp",
         help="Enable perplexity feature",
-        action=argparse.BooleanOptionalAction
+        action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
         "--enable_information_redundancy",
         "-eir",
         help="Enable information redundancy features",
-        action=argparse.BooleanOptionalAction
+        action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
         "--enable_entity_coherence",
         "-eec",
         help="Enable entity coherence features (note: this should only be enabled for monolingual English data)",
-        action=argparse.BooleanOptionalAction
+        action=argparse.BooleanOptionalAction,
     )
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
     parser.add_argument("--tags", "-tg", help="Tags", nargs="+", default=[])
-    parser.add_argument(
-        "--data_split_strategy",
-        "-dss",
-        default=[],
-        help="Data split strategy",
-        nargs="+",
-    )
-    parser.add_argument(
-        "--add_human_to_val",
-        "-ahv",
-        default=False,
-        help="Add human to validation set",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--downsample_to_test_size",
-        "-dts",
-        default=False,
-        action=argparse.BooleanOptionalAction,
-        help="Downsample to test size to make it more comparable with test data",
-    )
     parser.add_argument(
         "--hidden_size", "-hs", default=64, type=int, help="Hidden size"
     )
@@ -284,10 +229,7 @@ if __name__ == "__main__":
     train_df, valid_df, test_df = get_data(
         train_path,
         test_path,
-        random_seed,
-        args.data_split_strategy,
-        args.add_human_to_val,
-        args.downsample_to_test_size,
+        random_seed
     )
 
     # for testing purposes
@@ -314,7 +256,7 @@ if __name__ == "__main__":
             batch_size=args.batch_size_feature_extraction,
             fixed_length=args.fixed_length,
             experiment=experiment,
-            models=models#, "distilgpt2", "gpt2-large", "gpt2-xl"],
+            models=models,  # , "distilgpt2", "gpt2-large", "gpt2-xl"],
         )
         featurizers.append(pred_feature)
     if args.enable_perplexity:  # Example doc level feature
@@ -323,21 +265,21 @@ if __name__ == "__main__":
             local_device=local_device,
             fixed_length=args.fixed_length,
             experiment=experiment,
-            models=models#, "distilgpt2", "gpt2-large", "gpt2-xl"],
+            models=models,  # , "distilgpt2", "gpt2-large", "gpt2-xl"],
         )
         doc_level_featurizers.append(pp_feature)
     if args.enable_information_redundancy:
         from features.information_redundancy import InformationRedundancyFeature
+
         info_red_feature = InformationRedundancyFeature(
-            device=device,
-            local_device=local_device
+            device=device, local_device=local_device
         )
         doc_level_featurizers.append(info_red_feature)
     if args.enable_entity_coherence:
         from features.entity_coherence import EntityCoherenceFeature
+
         entity_coh_feature = EntityCoherenceFeature(
-            device=device,
-            local_device=local_device
+            device=device, local_device=local_device
         )
         doc_level_featurizers.append(entity_coh_feature)
     # NOTE: Add your doc level features here as we did for perplexity feature
@@ -378,19 +320,7 @@ if __name__ == "__main__":
         test_Y = np.array(test_df["label"].tolist())
 
     print("Building a model...")
-    # train_dataset = TensorDataset(
-    #     torch.tensor(train_X).float(),
-    #     torch.tensor(np.array(train_Y)).long(),
-    # )
-    # dev_dataset = TensorDataset(
-    #     torch.tensor(dev_X).float(),
-    #     torch.tensor(np.array(dev_Y)).long(),
-    # )
-    # test_dataset = TensorDataset(
-    #     torch.tensor(test_X).float(),
-    #     # torch.tensor(np.zeros(len(test_documents))).long(),
-    #     torch.tensor(np.array(test_Y)).long(),
-    # )
+
     train_dataset = TensorTextDataset(
         torch.tensor(train_X).float(),
         torch.tensor(np.array(train_Y)).long(),
@@ -417,21 +347,15 @@ if __name__ == "__main__":
         dropout_prop,
         attention_enabled,
     )
-    language = "en"
-
-    stats_path = out_path / (subtask + "_" + language + "_stats.tsv")
-    model_type = "bilstm"
 
     print("Preparing training")
 
     model = model.to(device)
     learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
-    milestones = [5] if model_type == "Hybrid" else []
+    milestones = [5] 
     scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.02)
     skip_visual = False
-    stats_file = open(stats_path, "w")
-    stats_file.write("epoch\ttrain_F1\tdev_F1\n")
 
     eval_loop(dev_loader, model, device, local_device, skip_visual)
     for epoch in range(args.epochs):
@@ -444,10 +368,6 @@ if __name__ == "__main__":
 
         experiment.log_metric("train_loss", train_loss)
         experiment.log_metric("train_f1", train_f1)
-
-        test_preds, test_probs = eval_loop(
-            test_loader, model, device, local_device, skip_visual, test=True
-        )
 
         print("Development set evaluation")
         dev_f1_micro, dev_f1_macro, dev_loss = eval_loop(
@@ -466,66 +386,3 @@ if __name__ == "__main__":
         experiment.log_metric("test_f1_macro", test_f1_macro)
         experiment.log_metric("test_f1_micro", test_f1_micro)
         experiment.log_metric("test_loss", test_loss)
-
-        stats_file.write(
-            str(epoch + 1) + "\t" + str(train_f1) + "\t" + str(dev_f1_micro) + "\n"
-        )
-
-        with open(
-            out_path / (subtask + "_" + language + "_preds_" + str(epoch + 1) + ".tsv"),
-            "w",
-        ) as f:
-            f.write("id\tlabel\n")
-            for test_id, pred in zip(test_ids, test_preds):
-                label = (
-                    ["human", "machine"][pred]
-                    if subtask == "A"
-                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"][
-                        pred
-                    ]
-                )
-                f.write(test_id + "\t" + label + "\n")
-
-        with open(
-            out_path
-            / (subtask + "_" + language + "_probs_test_" + str(epoch + 1) + ".tsv"),
-            "w",
-        ) as f:
-            f.write(
-                "id\t"
-                + "\t".join(
-                    ["human", "machine"]
-                    if subtask == "A"
-                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"]
-                )
-                + "\n"
-            )
-            for test_id, prob in zip(test_ids, test_probs):
-                f.write(test_id + "\t" + "\t".join([str(x) for x in prob]) + "\n")
-
-        _, dev_probs = eval_loop(
-            dev_loader, model, device, local_device, skip_visual, test=True
-        )
-        _, train_probs = eval_loop(
-            train_loader, model, device, local_device, skip_visual, test=True
-        )
-        with open(
-            out_path
-            / (subtask + "_" + language + "_probs_traindev_" + str(epoch + 1) + ".tsv"),
-            "w",
-        ) as f:
-            f.write(
-                "id\t"
-                + "\t".join(
-                    ["human", "machine"]
-                    if subtask == "A"
-                    else ["human", "chatGPT", "cohere", "davinci", "bloomz", "dooly"]
-                )
-                + "\n"
-            )
-            for test_id, prob in zip(
-                train_ids + dev_ids, [x for x in train_probs] + [x for x in dev_probs]
-            ):
-                f.write(test_id + "\t" + "\t".join([str(x) for x in prob]) + "\n")
-
-    stats_file.close()
