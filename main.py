@@ -127,6 +127,25 @@ if __name__ == "__main__":
         help="Enable entity coherence features (note: this should only be enabled for monolingual English data)",
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "--enable_stylometric",
+        "-est",
+        help="Enable stylometric features",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--enable_pos",
+        "-eps",
+        help="Enable POS tags feature",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--enable_tfidf",
+        "-etf",
+        help="Enable TF-IDF features",
+        action=argparse.BooleanOptionalAction,
+    )
+    
     parser.add_argument("--data_size", "-ds", help="Data size", default=-1, type=int)
     parser.add_argument("--tags", "-tg", help="Tags", nargs="+", default=[])
     parser.add_argument(
@@ -175,8 +194,8 @@ if __name__ == "__main__":
         raise ValueError("File doesnt exists: {}".format(train_path))
 
     if not os.path.exists(test_path):
-        logging.error("File doesnt exists: {}".format(train_path))
-        raise ValueError("File doesnt exists: {}".format(train_path))
+        logging.error("File doesnt exists: {}".format(test_path))
+        raise ValueError("File doesnt exists: {}".format(test_path))
 
     if subtask == "A":
         id2label = {0: "human", 1: "machine"}
@@ -281,7 +300,28 @@ if __name__ == "__main__":
             device=device, local_device=local_device
         )
         doc_level_featurizers.append(entity_coh_feature)
-    # NOTE: Add your doc level features here as we did for perplexity feature
+    if args.enable_stylometric:
+        from features.stylometric import StylometricFeatures
+
+        stylometric_features = StylometricFeatures()
+        doc_level_featurizers.append(stylometric_features)
+    if args.enable_pos:
+        from features.pos import POSFeature
+
+        pos_feature = POSFeature()
+        doc_level_featurizers.append(pos_feature)
+    if args.enable_tfidf:
+        from features.tfidf import TfidfFeatures
+
+        if args.subtask == "A":
+            if args.mono:
+                vect = "tfidf_vectorizers/vectorizer_task_a_mono.pkl"
+            else:
+                vect = "tfidf_vectorizers/vectorizer_task_a_multi.pkl"
+        elif args.subtask == "B":
+            vect = "tfidf_vectorizers/vectorizer_task_b.pkl"
+        tfidf_features = TfidfFeatures(vect)
+        doc_level_featurizers.append(tfidf_features)
 
     train_X = []
     dev_X = []

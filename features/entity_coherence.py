@@ -44,29 +44,32 @@ class EntityCoherenceFeature(FeatureGenerator):
     def features(self, documents):
         results = np.zeros((len(documents), 16)) 
         for i_doc, doc in enumerate(documents):
-            # split document into sentences
-            processed = self.nlp(doc)
-            chains = processed.coref
-            # get mentions for each referent in each sentence
-            mentions_by_sentence = [[
-                [m.start_word for m in c.mentions if m.sentence == s]
-                for s in range(len(processed.sentences))]
-                for c in chains]
-            # get the dependency roles for the mentions
-            ## for multiple mentions per sentence, get the 'highest' role
-            ### (subjects > objects > others)
-            ## for sentences with no mentions, assign '-'
-            roles_by_sentence = [
-                [max([processed.sentences[i].words[m].deprel for m in s],
-                     key=lambda role: role_rank.get(role, 1))
-                     if len(s) > 0 else "-" for i, s in enumerate(c)]
-                for c in mentions_by_sentence]
-            # transform role arrays into sequences, and vectorize
-            role_seq_by_sentence = ["".join([role_map.get(s, "X") for s in c]) for c in roles_by_sentence]
-            mat = self.vect.transform(role_seq_by_sentence)
-            dist = mat.sum(axis=0) / mat.sum()
-            #results[i_doc] = dist.toarray() # @alon. is this the right way to get the array? I got "AttributeError: 'matrix' object has no attribute 'toarray'"
-            results[i_doc] = dist
+            try:
+                # split document into sentences
+                processed = self.nlp(doc)
+                chains = processed.coref
+                # get mentions for each referent in each sentence
+                mentions_by_sentence = [[
+                    [m.start_word for m in c.mentions if m.sentence == s]
+                    for s in range(len(processed.sentences))]
+                    for c in chains]
+                # get the dependency roles for the mentions
+                ## for multiple mentions per sentence, get the 'highest' role
+                ### (subjects > objects > others)
+                ## for sentences with no mentions, assign '-'
+                roles_by_sentence = [
+                    [max([processed.sentences[i].words[m].deprel for m in s],
+                         key=lambda role: role_rank.get(role, 1))
+                         if len(s) > 0 else "-" for i, s in enumerate(c)]
+                    for c in mentions_by_sentence]
+                # transform role arrays into sequences, and vectorize
+                role_seq_by_sentence = ["".join([role_map.get(s, "X") for s in c]) for c in roles_by_sentence]
+                mat = self.vect.transform(role_seq_by_sentence)
+                dist = mat.sum(axis=0) / mat.sum()
+                #results[i_doc] = dist.toarray() # @alon. is this the right way to get the array? I got "AttributeError: 'matrix' object has no attribute 'toarray'"
+                results[i_doc] = dist
+            except ValueError:
+                pass
         return results
     
 
